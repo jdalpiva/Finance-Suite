@@ -1,0 +1,60 @@
+<Window
+    x:Class="SMEFinanceSuite.App.Desktop.Views.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:SMEFinanceSuite.App.Desktop.ViewModels"
+    x:DataType="vm:MainWindowViewModel"
+    Width="980"
+    Height="640"
+    MinWidth="860"
+    MinHeight="540"
+    Title="SME Finance Suite">
+  <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="20">
+    <StackPanel Spacing="6">
+      <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
+      <TextBlock Opacity="0.72" Text="Base inicial para substituir planilhas por um sistema financeiro-operacional mais claro e sustentável." />
+      <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+      <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" Opacity="0.72" Text="Receita Total" />
+          <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding TotalRevenueDisplay}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" Opacity="0.72" Text="Despesa Total" />
+          <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding TotalExpenseDisplay}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" Opacity="0.72" Text="Fluxo de Caixa Líquido" />
+          <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding NetCashFlowDisplay}" />
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Row="1" Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <StackPanel Spacing="6">
+          <TextBlock FontSize="14" Opacity="0.72" Text="Base Cadastral" />
+          <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding RegistrySummary}" />
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="2" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+      <StackPanel Spacing="10">
+        <TextBlock FontSize="18" FontWeight="SemiBold" Text="Próximos módulos sugeridos" />
+        <TextBlock Text="• Lançamentos: CRUD completo com filtros por período, categoria e centro de custo." />
+        <TextBlock Text="• Clientes: cadastro, busca, relacionamento com vendas e inadimplência." />
+        <TextBlock Text="• Produtos/Serviços: preço, categoria, margem e status." />
+        <TextBlock Text="• Indicadores: ponto de equilíbrio, margem de contribuição, margem de segurança e fluxo de caixa." />
+        <TextBlock Text="• Evolução SaaS: extrair API mantendo o mesmo domínio e as mesmas regras de negócio." />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>
