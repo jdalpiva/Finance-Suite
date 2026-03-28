@@ -29,6 +29,28 @@ public static class Guard
         return value;
     }
 
+    public static decimal AgainstInvalidMonetaryAmount(decimal value, string parameterName)
+    {
+        AgainstNegativeOrZero(value, parameterName);
+
+        if (decimal.Round(value, 2, MidpointRounding.AwayFromZero) != value)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "O valor monetário deve ter no máximo 2 casas decimais.");
+        }
+
+        return value;
+    }
+
+    public static DateOnly AgainstDefaultDate(DateOnly value, string parameterName)
+    {
+        if (value == default)
+        {
+            throw new ArgumentException("A data informada é obrigatória.", parameterName);
+        }
+
+        return value;
+    }
+
     public static string? NormalizeOptional(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))

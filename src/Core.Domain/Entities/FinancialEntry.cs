@@ -19,8 +19,8 @@ public sealed class FinancialEntry : AuditableEntity
         string? notes = null)
     {
         Description = Guard.AgainstNullOrWhiteSpace(description, nameof(description), 160);
-        Amount = Guard.AgainstNegativeOrZero(amount, nameof(amount));
-        OccurredOn = occurredOn;
+        Amount = Guard.AgainstInvalidMonetaryAmount(amount, nameof(amount));
+        OccurredOn = Guard.AgainstDefaultDate(occurredOn, nameof(occurredOn));
         EntryType = entryType;
         CustomerId = customerId;
         ProductServiceId = productServiceId;

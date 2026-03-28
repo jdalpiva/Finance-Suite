@@ -12,7 +12,7 @@ public sealed class ProductService : AuditableEntity
     {
         Name = Guard.AgainstNullOrWhiteSpace(name, nameof(name), 120);
         Category = Guard.AgainstNullOrWhiteSpace(category, nameof(category), 80);
-        UnitPrice = Guard.AgainstNegativeOrZero(unitPrice, nameof(unitPrice));
+        UnitPrice = Guard.AgainstInvalidMonetaryAmount(unitPrice, nameof(unitPrice));
         IsService = isService;
         IsActive = true;
     }
@@ -29,7 +29,7 @@ public sealed class ProductService : AuditableEntity
 
     public void UpdatePricing(decimal unitPrice)
     {
-        UnitPrice = Guard.AgainstNegativeOrZero(unitPrice, nameof(unitPrice));
+        UnitPrice = Guard.AgainstInvalidMonetaryAmount(unitPrice, nameof(unitPrice));
         Touch();
     }
 

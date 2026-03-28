@@ -49,5 +49,7 @@ public sealed class FinancialEntryConfiguration : IEntityTypeConfiguration<Finan
             .WithMany()
             .HasForeignKey(entry => entry.ProductServiceId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasIndex(entry => new { entry.EntryType, entry.OccurredOn });
     }
 }
