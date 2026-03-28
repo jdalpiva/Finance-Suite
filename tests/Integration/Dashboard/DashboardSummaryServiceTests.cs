@@ -13,8 +13,10 @@ public sealed class DashboardSummaryServiceTests
     [Fact]
     public async Task GetSummaryAsync_ShouldReturnAggregatedValues()
     {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
         using var connection = new SqliteConnection("Data Source=:memory:");
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseSqlite(connection)
@@ -22,7 +24,7 @@ public sealed class DashboardSummaryServiceTests
 
         await using (var setupContext = new AppDbContext(options))
         {
-            await setupContext.Database.EnsureCreatedAsync();
+            await setupContext.Database.EnsureCreatedAsync(cancellationToken);
 
             var customer = new Customer("Cliente Integração");
             var service = new ProductService("Serviço de Teste", "Serviços", 100m, isService: true);
@@ -33,13 +35,13 @@ public sealed class DashboardSummaryServiceTests
                 new FinancialEntry("Receita", 500m, DateOnly.FromDateTime(DateTime.Today), EntryType.Revenue, customer.Id, service.Id),
                 new FinancialEntry("Despesa", 150m, DateOnly.FromDateTime(DateTime.Today), EntryType.Expense));
 
-            await setupContext.SaveChangesAsync();
+            await setupContext.SaveChangesAsync(cancellationToken);
         }
 
         var dbContextFactory = new TestDbContextFactory(options);
         var dashboardSummaryService = new DashboardSummaryService(dbContextFactory);
 
-        var summary = await dashboardSummaryService.GetSummaryAsync();
+        var summary = await dashboardSummaryService.GetSummaryAsync(cancellationToken: cancellationToken);
 
         Assert.Equal(500m, summary.TotalRevenue);
         Assert.Equal(150m, summary.TotalExpense);

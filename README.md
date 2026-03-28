@@ -4,8 +4,8 @@ Solução inicial real, desktop-first, para substituir planilhas por um sistema 
 
 ## Stack base
 
-- **.NET 10 (LTS)** para o runtime e SDK.
-- **Avalonia UI** para a interface desktop cross-platform.
+- **.NET 10 (LTS)** para runtime e SDK.
+- **Avalonia UI** para interface desktop cross-platform.
 - **Entity Framework Core + SQLite** para persistência local-first.
 - **xUnit v3** para testes.
 
@@ -25,11 +25,28 @@ SMEFinanceSuite/
     └── Integration/
 ```
 
-## Como abrir e rodar
+## Pré-requisitos
+
+1. SDK do .NET 10 instalado (o repositório está fixado por `global.json`).
+2. Sistema operacional Linux, Windows ou macOS com suporte ao .NET SDK.
+
+Valide o SDK ativo:
 
 ```bash
-dotnet restore
-dotnet build
+dotnet --list-sdks
+```
+
+## Como restaurar, compilar e testar
+
+```bash
+dotnet restore SMEFinanceSuite.sln
+dotnet build SMEFinanceSuite.sln
+dotnet test SMEFinanceSuite.sln
+```
+
+## Como executar o desktop
+
+```bash
 dotnet run --project src/App.Desktop/App.Desktop.csproj
 ```
 
@@ -50,7 +67,3 @@ O caminho pode ser alterado em `src/App.Desktop/appsettings.json`.
 3. Criar módulo de produtos/serviços.
 4. Adicionar orçamento e ponto de equilíbrio.
 5. Expor a camada Application por uma API ASP.NET Core para iniciar a evolução para SaaS.
-
-## Observação importante
-
-Esta solução foi montada estruturalmente e não foi validada por build dentro deste ambiente, porque o container usado para gerar os arquivos **não possui o SDK do .NET instalado**. Ainda assim, os arquivos foram organizados para abrir como solução e servir de base real de desenvolvimento.

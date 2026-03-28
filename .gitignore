@@ -1,11 +1,34 @@
-bin/
-obj/
+# Build outputs
+**/bin/
+**/obj/
+artifacts/
+TestResults/
+
+# IDEs / editors
 .vs/
 .idea/
+.vscode/
 *.user
 *.suo
+
+# OS and local tooling
+.DS_Store
+Thumbs.db
+*.swp
+*.tmp
+
+# .NET / NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Local database files
 *.db
 *.db-shm
 *.db-wal
-TestResults/
-artifacts/
+
+# Coverage
+coverage/
+coverage.*
+*.coverage
+*.trx
