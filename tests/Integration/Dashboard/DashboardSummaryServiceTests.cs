@@ -24,7 +24,7 @@ public sealed class DashboardSummaryServiceTests
 
         await using (var setupContext = new AppDbContext(options))
         {
-            await setupContext.Database.EnsureCreatedAsync(cancellationToken);
+            await setupContext.Database.MigrateAsync(cancellationToken);
 
             var customer = new Customer("Cliente Integração");
             var service = new ProductService("Serviço de Teste", "Serviços", 100m, isService: true);

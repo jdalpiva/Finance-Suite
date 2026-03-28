@@ -42,3 +42,16 @@ dotnet test SMEFinanceSuite.sln
 ## Observação
 
 Foi adicionado `global.json` para explicitar o SDK esperado e reduzir divergência entre ambientes.
+
+## Ajustes críticos pré-Sprint 1 (2026-03-28)
+
+- Startup Avalonia: removido `GetAwaiter().GetResult()` e adotado fluxo assíncrono de inicialização.
+- Dependências: `App.Desktop` não referencia mais `Core.Infrastructure` diretamente.
+- Banco: inicialização passou para `Database.MigrateAsync()` com migration inicial versionada.
+
+Comandos úteis para schema:
+
+```bash
+dotnet ef migrations add NomeDaMigration --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
+dotnet ef database update --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
+```

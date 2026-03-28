@@ -60,6 +60,22 @@ Data Source=sme-finance-suite.db
 
 O caminho pode ser alterado em `src/App.Desktop/appsettings.json`.
 
+### Migrations (EF Core)
+
+O projeto usa migrations para evolução de schema (não usa `EnsureCreated`).
+
+Aplicar migrations no banco configurado:
+
+```bash
+dotnet ef database update --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
+```
+
+Criar uma nova migration:
+
+```bash
+dotnet ef migrations add NomeDaMigration --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
+```
+
 ## Próximos passos sugeridos
 
 1. Criar módulo de lançamentos com CRUD completo.
