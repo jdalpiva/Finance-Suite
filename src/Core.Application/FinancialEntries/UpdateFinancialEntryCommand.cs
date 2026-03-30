@@ -8,4 +8,5 @@ public sealed record UpdateFinancialEntryCommand(
     decimal Amount,
     DateOnly OccurredOn,
     EntryType EntryType,
-    string? Notes);
+    string? Notes,
+    Guid? CustomerId = null);

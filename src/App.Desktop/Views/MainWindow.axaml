@@ -184,7 +184,7 @@
             </Border>
 
             <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
                 <TextBlock FontSize="20" FontWeight="SemiBold" Text="Formulário de cliente" />
 
                 <StackPanel Grid.Row="1" Spacing="4">
@@ -204,9 +204,11 @@
 
                 <Button Grid.Row="4" Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CanRegisterCustomer}" />
 
-                <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="8" VerticalAlignment="Top">
+                <TextBlock Grid.Row="5" IsVisible="{Binding IsCustomerDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o cliente selecionado." TextWrapping="Wrap" />
+
+                <Grid Grid.Row="6" ColumnDefinitions="*,*" ColumnSpacing="8" VerticalAlignment="Top">
                   <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedCustomer}" />
-                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="Excluir selecionado" IsEnabled="{Binding CanDeleteSelectedCustomer}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding DeleteSelectedCustomerButtonLabel}" IsEnabled="{Binding CanDeleteSelectedCustomer}" />
                 </Grid>
               </Grid>
             </Border>

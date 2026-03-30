@@ -181,6 +181,68 @@ public sealed class FinancialEntryServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_ShouldUpdateCustomerLink_WhenCustomerIdChanges()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid entryId;
+        Guid sourceCustomerId;
+        Guid targetCustomerId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var sourceCustomer = new Customer("Cliente Origem");
+            var targetCustomer = new Customer("Cliente Destino");
+            setupContext.Customers.AddRange(sourceCustomer, targetCustomer);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            sourceCustomerId = sourceCustomer.Id;
+            targetCustomerId = targetCustomer.Id;
+
+            var entry = new FinancialEntry(
+                description: "Receita com cliente",
+                amount: 500m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today),
+                entryType: EntryType.Revenue,
+                customerId: sourceCustomerId);
+
+            setupContext.FinancialEntries.Add(entry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            entryId = entry.Id;
+        }
+
+        var service = new FinancialEntryService(new TestDbContextFactory(options));
+
+        await service.UpdateAsync(
+            new UpdateFinancialEntryCommand(
+                Id: entryId,
+                Description: "Receita com cliente atualizado",
+                Amount: 500m,
+                OccurredOn: DateOnly.FromDateTime(DateTime.Today),
+                EntryType: EntryType.Revenue,
+                Notes: "Vínculo alterado",
+                CustomerId: targetCustomerId),
+            cancellationToken);
+
+        IReadOnlyList<FinancialEntryListItemDto> entries = await service.ListAsync(cancellationToken: cancellationToken);
+        FinancialEntryListItemDto updatedEntry = Assert.Single(entries);
+
+        Assert.Equal(entryId, updatedEntry.Id);
+        Assert.Equal(targetCustomerId, updatedEntry.CustomerId);
+        Assert.NotEqual(sourceCustomerId, updatedEntry.CustomerId);
+    }
+
+    [Fact]
     public async Task DeleteAsync_ShouldRemoveEntry_WhenEntryExists()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;

@@ -4,6 +4,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\App.Desktop\App.Desktop.csproj" />
     <ProjectReference Include="..\..\src\Core.Application\Core.Application.csproj" />
     <ProjectReference Include="..\..\src\Core.Infrastructure\Core.Infrastructure.csproj" />
   </ItemGroup>

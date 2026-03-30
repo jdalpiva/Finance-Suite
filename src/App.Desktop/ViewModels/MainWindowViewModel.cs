@@ -31,6 +31,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private bool _isBusy;
     private bool _isDeleteConfirmationPending;
     private Guid? _deleteConfirmationEntryId;
+    private bool _isCustomerDeleteConfirmationPending;
+    private Guid? _deleteConfirmationCustomerId;
 
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
@@ -94,6 +96,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public string DeleteSelectedEntryButtonLabel => IsDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
 
+    public bool IsCustomerDeleteConfirmationPending => _isCustomerDeleteConfirmationPending;
+
+    public string DeleteSelectedCustomerButtonLabel => IsCustomerDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
+
     public bool CanApplyFilters => !IsBusy;
 
     public bool CanClearFilters => !IsBusy;
@@ -143,6 +149,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
             OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
             OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
+            ResetCustomerDeleteConfirmation();
 
             if (value is null)
             {
@@ -367,6 +374,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await _customerService.RegisterAsync(command, cancellationToken);
 
             SelectedCustomer = null;
+            ResetCustomerDeleteConfirmation();
             await LoadCustomersAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
 
@@ -399,6 +407,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             UpdateCustomerCommand command = CustomerForm.BuildUpdateCommand(SelectedCustomer.Id);
             await _customerService.UpdateAsync(command, cancellationToken);
 
+            ResetCustomerDeleteConfirmation();
             await LoadCustomersAsync(cancellationToken, selectedCustomerId: command.Id);
             await LoadDashboardAsync(cancellationToken);
 
@@ -416,6 +425,24 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public async Task DeleteSelectedCustomerAsync(CancellationToken cancellationToken = default)
     {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (SelectedCustomer is null)
+        {
+            StatusMessage = "Selecione um cliente para excluir.";
+            return;
+        }
+
+        if (!IsCustomerDeleteConfirmationPending || _deleteConfirmationCustomerId != SelectedCustomer.Id)
+        {
+            SetCustomerDeleteConfirmation(SelectedCustomer.Id);
+            StatusMessage = "Confirme a exclusão do cliente clicando novamente no botão.";
+            return;
+        }
+
         if (!TryBeginBusyOperation())
         {
             return;
@@ -423,11 +450,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            if (SelectedCustomer is null)
-            {
-                throw new InvalidOperationException("Selecione um cliente para excluir.");
-            }
-
             Guid customerId = SelectedCustomer.Id;
             await _customerService.DeleteAsync(customerId, cancellationToken);
 
@@ -437,6 +459,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             }
 
             SelectedCustomer = null;
+            ResetCustomerDeleteConfirmation();
             await LoadCustomersAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
 
@@ -562,6 +585,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _deleteConfirmationEntryId = null;
         OnPropertyChanged(nameof(IsDeleteConfirmationPending));
         OnPropertyChanged(nameof(DeleteSelectedEntryButtonLabel));
+    }
+
+    private void SetCustomerDeleteConfirmation(Guid customerId)
+    {
+        _isCustomerDeleteConfirmationPending = true;
+        _deleteConfirmationCustomerId = customerId;
+        OnPropertyChanged(nameof(IsCustomerDeleteConfirmationPending));
+        OnPropertyChanged(nameof(DeleteSelectedCustomerButtonLabel));
+    }
+
+    private void ResetCustomerDeleteConfirmation()
+    {
+        if (!_isCustomerDeleteConfirmationPending && _deleteConfirmationCustomerId is null)
+        {
+            return;
+        }
+
+        _isCustomerDeleteConfirmationPending = false;
+        _deleteConfirmationCustomerId = null;
+        OnPropertyChanged(nameof(IsCustomerDeleteConfirmationPending));
+        OnPropertyChanged(nameof(DeleteSelectedCustomerButtonLabel));
     }
 
     private bool TryBeginBusyOperation()

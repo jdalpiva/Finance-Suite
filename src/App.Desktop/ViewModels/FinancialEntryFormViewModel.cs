@@ -80,6 +80,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             Amount: amount,
             OccurredOn: occurredOn,
             EntryType: entryType,
+            CustomerId: SelectedCustomerId,
             Notes: notes);
     }
 

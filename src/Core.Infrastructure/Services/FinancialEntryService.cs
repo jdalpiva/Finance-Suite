@@ -59,6 +59,18 @@ public sealed class FinancialEntryService(IDbContextFactory<AppDbContext> dbCont
 
         await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        if (command.CustomerId.HasValue)
+        {
+            bool customerExists = await dbContext.Customers
+                .AsNoTracking()
+                .AnyAsync(customer => customer.Id == command.CustomerId.Value, cancellationToken);
+
+            if (!customerExists)
+            {
+                throw new InvalidOperationException("Cliente informado não foi encontrado.");
+            }
+        }
+
         FinancialEntry? entry = await dbContext.FinancialEntries
             .FirstOrDefaultAsync(item => item.Id == command.Id, cancellationToken);
 
@@ -72,6 +84,7 @@ public sealed class FinancialEntryService(IDbContextFactory<AppDbContext> dbCont
             amount: command.Amount,
             occurredOn: command.OccurredOn,
             entryType: command.EntryType,
+            customerId: command.CustomerId,
             notes: command.Notes);
 
         await dbContext.SaveChangesAsync(cancellationToken);

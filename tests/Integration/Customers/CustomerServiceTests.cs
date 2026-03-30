@@ -2,6 +2,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Domain.Entities;
+using SMEFinanceSuite.Core.Domain.Enums;
 using SMEFinanceSuite.Core.Infrastructure.Persistence;
 using SMEFinanceSuite.Core.Infrastructure.Services;
 using SMEFinanceSuite.Tests.Integration.TestHelpers;
@@ -151,5 +152,47 @@ public sealed class CustomerServiceTests
 
         IReadOnlyList<CustomerListItemDto> customers = await service.ListAsync(cancellationToken);
         Assert.Empty(customers);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldThrow_WhenCustomerHasLinkedFinancialEntries()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid customerId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var customer = new Customer("Cliente com lançamento");
+            setupContext.Customers.Add(customer);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            customerId = customer.Id;
+
+            var linkedEntry = new FinancialEntry(
+                description: "Receita vinculada",
+                amount: 250m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today),
+                entryType: EntryType.Revenue,
+                customerId: customerId);
+
+            setupContext.FinancialEntries.Add(linkedEntry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new CustomerService(new TestDbContextFactory(options));
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => service.DeleteAsync(customerId, cancellationToken));
+
+        Assert.Equal("Não é possível excluir um cliente com lançamentos vinculados. Atualize ou remova os lançamentos antes da exclusão.", exception.Message);
     }
 }

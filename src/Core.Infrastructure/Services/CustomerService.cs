@@ -68,6 +68,15 @@ public sealed class CustomerService(IDbContextFactory<AppDbContext> dbContextFac
     {
         await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        bool hasLinkedEntries = await dbContext.FinancialEntries
+            .AsNoTracking()
+            .AnyAsync(entry => entry.CustomerId == id, cancellationToken);
+
+        if (hasLinkedEntries)
+        {
+            throw new InvalidOperationException("Não é possível excluir um cliente com lançamentos vinculados. Atualize ou remova os lançamentos antes da exclusão.");
+        }
+
         Customer? customer = await dbContext.Customers
             .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
 

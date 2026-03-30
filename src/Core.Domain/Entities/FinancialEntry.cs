@@ -50,12 +50,14 @@ public sealed class FinancialEntry : AuditableEntity
         decimal amount,
         DateOnly occurredOn,
         EntryType entryType,
+        Guid? customerId,
         string? notes)
     {
         Description = Guard.AgainstNullOrWhiteSpace(description, nameof(description), 160);
         Amount = Guard.AgainstInvalidMonetaryAmount(amount, nameof(amount));
         OccurredOn = Guard.AgainstDefaultDate(occurredOn, nameof(occurredOn));
         EntryType = entryType;
+        CustomerId = customerId;
         Notes = Guard.NormalizeOptional(notes, 400);
         Touch();
     }
