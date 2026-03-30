@@ -53,6 +53,46 @@ public sealed class FinancialEntryService(IDbContextFactory<AppDbContext> dbCont
         return entry.Id;
     }
 
+    public async Task UpdateAsync(UpdateFinancialEntryCommand command, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        FinancialEntry? entry = await dbContext.FinancialEntries
+            .FirstOrDefaultAsync(item => item.Id == command.Id, cancellationToken);
+
+        if (entry is null)
+        {
+            throw new InvalidOperationException("Lançamento informado não foi encontrado.");
+        }
+
+        entry.Update(
+            description: command.Description,
+            amount: command.Amount,
+            occurredOn: command.OccurredOn,
+            entryType: command.EntryType,
+            notes: command.Notes);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        FinancialEntry? entry = await dbContext.FinancialEntries
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+
+        if (entry is null)
+        {
+            throw new InvalidOperationException("Lançamento informado não foi encontrado.");
+        }
+
+        dbContext.FinancialEntries.Remove(entry);
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<FinancialEntryListItemDto>> ListAsync(
         FinancialEntriesFilter? filter = null,
         CancellationToken cancellationToken = default)

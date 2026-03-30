@@ -127,4 +127,94 @@ public sealed class FinancialEntryServiceTests
         Assert.Single(filtered);
         Assert.Equal("Receita C", filtered[0].Description);
     }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldPersistChanges_WhenEntryExists()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid entryId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var entry = new FinancialEntry(
+                description: "Receita recorrente",
+                amount: 900m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today.AddDays(-1)),
+                entryType: EntryType.Revenue,
+                notes: "Original");
+
+            setupContext.FinancialEntries.Add(entry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            entryId = entry.Id;
+        }
+
+        var service = new FinancialEntryService(new TestDbContextFactory(options));
+
+        await service.UpdateAsync(
+            new UpdateFinancialEntryCommand(
+                Id: entryId,
+                Description: "Receita recorrente atualizada",
+                Amount: 975.40m,
+                OccurredOn: DateOnly.FromDateTime(DateTime.Today),
+                EntryType: EntryType.Revenue,
+                Notes: "Atualizado"),
+            cancellationToken);
+
+        IReadOnlyList<FinancialEntryListItemDto> entries = await service.ListAsync(cancellationToken: cancellationToken);
+        FinancialEntryListItemDto updatedEntry = Assert.Single(entries);
+
+        Assert.Equal(entryId, updatedEntry.Id);
+        Assert.Equal("Receita recorrente atualizada", updatedEntry.Description);
+        Assert.Equal(975.40m, updatedEntry.Amount);
+        Assert.Equal("Atualizado", updatedEntry.Notes);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_ShouldRemoveEntry_WhenEntryExists()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid entryId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var entry = new FinancialEntry(
+                description: "Despesa temporária",
+                amount: 120m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today),
+                entryType: EntryType.Expense);
+
+            setupContext.FinancialEntries.Add(entry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            entryId = entry.Id;
+        }
+
+        var service = new FinancialEntryService(new TestDbContextFactory(options));
+
+        await service.DeleteAsync(entryId, cancellationToken);
+
+        IReadOnlyList<FinancialEntryListItemDto> entries = await service.ListAsync(cancellationToken: cancellationToken);
+        Assert.Empty(entries);
+    }
 }

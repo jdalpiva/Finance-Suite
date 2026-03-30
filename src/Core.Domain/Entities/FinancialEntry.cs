@@ -45,6 +45,21 @@ public sealed class FinancialEntry : AuditableEntity
 
     public string? Notes { get; private set; }
 
+    public void Update(
+        string description,
+        decimal amount,
+        DateOnly occurredOn,
+        EntryType entryType,
+        string? notes)
+    {
+        Description = Guard.AgainstNullOrWhiteSpace(description, nameof(description), 160);
+        Amount = Guard.AgainstInvalidMonetaryAmount(amount, nameof(amount));
+        OccurredOn = Guard.AgainstDefaultDate(occurredOn, nameof(occurredOn));
+        EntryType = entryType;
+        Notes = Guard.NormalizeOptional(notes, 400);
+        Touch();
+    }
+
     public void Reclassify(EntryType entryType)
     {
         EntryType = entryType;

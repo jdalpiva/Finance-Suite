@@ -29,6 +29,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private string _selectedFormEntryType = "Receita";
     private string _newEntryNotes = string.Empty;
 
+    private FinancialEntryListItemViewModel? _selectedFinancialEntry;
+    private bool _isBusy;
+
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
         IFinancialEntryService financialEntryService)
@@ -56,6 +59,54 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public string RegistrySummary => $"{_summary.CustomersCount} clientes • {_summary.ProductsCount} itens";
 
     public string EntriesSummary => $"{FinancialEntries.Count} lançamentos";
+
+    public bool IsBusy
+    {
+        get => _isBusy;
+        private set
+        {
+            if (!SetProperty(ref _isBusy, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(CanApplyFilters));
+            OnPropertyChanged(nameof(CanClearFilters));
+            OnPropertyChanged(nameof(CanRegisterEntry));
+            OnPropertyChanged(nameof(CanUpdateSelectedEntry));
+            OnPropertyChanged(nameof(CanDeleteSelectedEntry));
+        }
+    }
+
+    public bool CanApplyFilters => !IsBusy;
+
+    public bool CanClearFilters => !IsBusy;
+
+    public bool CanRegisterEntry => !IsBusy;
+
+    public bool CanUpdateSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
+
+    public bool CanDeleteSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
+
+    public FinancialEntryListItemViewModel? SelectedFinancialEntry
+    {
+        get => _selectedFinancialEntry;
+        set
+        {
+            if (!SetProperty(ref _selectedFinancialEntry, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(CanUpdateSelectedEntry));
+            OnPropertyChanged(nameof(CanDeleteSelectedEntry));
+
+            if (value is not null)
+            {
+                FillEntryFormFromSelection(value);
+            }
+        }
+    }
 
     public string FilterFrom
     {
@@ -127,6 +178,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public async Task ApplyFiltersAsync(CancellationToken cancellationToken = default)
     {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
         try
         {
             await LoadEntriesAsync(cancellationToken);
@@ -136,24 +192,51 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             StatusMessage = $"Falha ao aplicar filtros: {exception.Message}";
         }
+        finally
+        {
+            EndBusyOperation();
+        }
     }
 
     public async Task ClearFiltersAsync(CancellationToken cancellationToken = default)
     {
-        FilterFrom = string.Empty;
-        FilterTo = string.Empty;
-        SelectedFilterType = FilterTypeOptions[0];
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
 
-        await ApplyFiltersAsync(cancellationToken);
+        try
+        {
+            FilterFrom = string.Empty;
+            FilterTo = string.Empty;
+            SelectedFilterType = FilterTypeOptions[0];
+
+            await LoadEntriesAsync(cancellationToken);
+            StatusMessage = $"Filtros limpos em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao limpar filtros: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
     }
 
     public async Task RegisterEntryAsync(CancellationToken cancellationToken = default)
     {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
         try
         {
             CreateFinancialEntryCommand command = BuildCreateCommand();
             await _financialEntryService.RegisterAsync(command, cancellationToken);
 
+            SelectedFinancialEntry = null;
             ClearEntryForm();
             await LoadEntriesAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
@@ -163,6 +246,76 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception exception)
         {
             StatusMessage = $"Falha ao cadastrar lançamento: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task UpdateSelectedEntryAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            if (SelectedFinancialEntry is null)
+            {
+                throw new InvalidOperationException("Selecione um lançamento para atualizar.");
+            }
+
+            UpdateFinancialEntryCommand command = BuildUpdateCommand(SelectedFinancialEntry.Id);
+            await _financialEntryService.UpdateAsync(command, cancellationToken);
+
+            await LoadEntriesAsync(cancellationToken, selectedEntryId: command.Id);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Lançamento atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao atualizar lançamento: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task DeleteSelectedEntryAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            if (SelectedFinancialEntry is null)
+            {
+                throw new InvalidOperationException("Selecione um lançamento para excluir.");
+            }
+
+            Guid selectedEntryId = SelectedFinancialEntry.Id;
+            await _financialEntryService.DeleteAsync(selectedEntryId, cancellationToken);
+
+            SelectedFinancialEntry = null;
+            ClearEntryForm();
+            await LoadEntriesAsync(cancellationToken);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Lançamento excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao excluir lançamento: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
         }
     }
 
@@ -176,23 +329,37 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(RegistrySummary));
     }
 
-    private async Task LoadEntriesAsync(CancellationToken cancellationToken)
+    private async Task LoadEntriesAsync(CancellationToken cancellationToken, Guid? selectedEntryId = null)
     {
         FinancialEntriesFilter filter = BuildFilter();
 
         IReadOnlyList<FinancialEntryListItemDto> entries = await _financialEntryService.ListAsync(filter, cancellationToken);
+
+        Guid? selectedEntryIdToRestore = selectedEntryId ?? SelectedFinancialEntry?.Id;
 
         FinancialEntries.Clear();
 
         foreach (FinancialEntryListItemDto entry in entries)
         {
             FinancialEntries.Add(new FinancialEntryListItemViewModel(
+                id: entry.Id,
                 description: entry.Description,
+                amount: entry.Amount,
+                occurredOn: entry.OccurredOn,
                 occurredOnDisplay: entry.OccurredOn.ToString("dd/MM/yyyy", PortugueseCulture),
                 amountDisplay: entry.Amount.ToString("C", PortugueseCulture),
                 entryTypeDisplay: ToEntryTypeLabel(entry.EntryType),
+                notes: entry.Notes,
                 notesDisplay: string.IsNullOrWhiteSpace(entry.Notes) ? "-" : entry.Notes));
         }
+
+        if (selectedEntryIdToRestore is null)
+        {
+            SelectedFinancialEntry = null;
+            return;
+        }
+
+        SelectedFinancialEntry = FinancialEntries.FirstOrDefault(entry => entry.Id == selectedEntryIdToRestore.Value);
     }
 
     private FinancialEntriesFilter BuildFilter()
@@ -211,6 +378,31 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     }
 
     private CreateFinancialEntryCommand BuildCreateCommand()
+    {
+        (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
+
+        return new CreateFinancialEntryCommand(
+            Description: description,
+            Amount: amount,
+            OccurredOn: occurredOn,
+            EntryType: entryType,
+            Notes: notes);
+    }
+
+    private UpdateFinancialEntryCommand BuildUpdateCommand(Guid id)
+    {
+        (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
+
+        return new UpdateFinancialEntryCommand(
+            Id: id,
+            Description: description,
+            Amount: amount,
+            OccurredOn: occurredOn,
+            EntryType: entryType,
+            Notes: notes);
+    }
+
+    private (string Description, decimal Amount, DateOnly OccurredOn, EntryType EntryType, string? Notes) BuildEntryInput()
     {
         string description = NewEntryDescription.Trim();
 
@@ -234,12 +426,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             ? null
             : NewEntryNotes.Trim();
 
-        return new CreateFinancialEntryCommand(
-            Description: description,
-            Amount: amount,
-            OccurredOn: occurredOn,
-            EntryType: entryType,
-            Notes: notes);
+        return (description, amount, occurredOn, entryType, notes);
+    }
+
+    private void FillEntryFormFromSelection(FinancialEntryListItemViewModel selectedEntry)
+    {
+        NewEntryDescription = selectedEntry.Description;
+        NewEntryAmount = selectedEntry.Amount.ToString("0.00", PortugueseCulture);
+        NewEntryOccurredOn = selectedEntry.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        SelectedFormEntryType = selectedEntry.EntryTypeDisplay;
+        NewEntryNotes = selectedEntry.Notes ?? string.Empty;
     }
 
     private void ClearEntryForm()
@@ -249,6 +445,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         NewEntryOccurredOn = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         SelectedFormEntryType = FormEntryTypeOptions[0];
         NewEntryNotes = string.Empty;
+    }
+
+    private bool TryBeginBusyOperation()
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        IsBusy = true;
+        return true;
+    }
+
+    private void EndBusyOperation()
+    {
+        IsBusy = false;
     }
 
     private static bool TryParseAmount(string rawAmount, out decimal amount)
