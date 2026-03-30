@@ -36,9 +36,47 @@ public sealed class CustomerService(IDbContextFactory<AppDbContext> dbContextFac
             .Take(200)
             .Select(customer => new CustomerListItemDto(
                 Id: customer.Id,
-                Name: customer.Name))
+                Name: customer.Name,
+                Email: customer.Email,
+                Phone: customer.Phone))
             .ToListAsync(cancellationToken);
 
         return customers;
+    }
+
+    public async Task UpdateAsync(UpdateCustomerCommand command, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(command);
+
+        await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Customer? customer = await dbContext.Customers
+            .FirstOrDefaultAsync(item => item.Id == command.Id, cancellationToken);
+
+        if (customer is null)
+        {
+            throw new InvalidOperationException("Cliente informado não foi encontrado.");
+        }
+
+        customer.Rename(command.Name);
+        customer.UpdateContact(command.Email, command.Phone);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        Customer? customer = await dbContext.Customers
+            .FirstOrDefaultAsync(item => item.Id == id, cancellationToken);
+
+        if (customer is null)
+        {
+            throw new InvalidOperationException("Cliente informado não foi encontrado.");
+        }
+
+        dbContext.Customers.Remove(customer);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

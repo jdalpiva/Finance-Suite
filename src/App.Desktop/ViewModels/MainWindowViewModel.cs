@@ -20,14 +20,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private readonly ICustomerService _customerService;
 
     private DashboardSummaryDto _summary = DashboardSummaryDto.Empty;
-    private string _statusMessage = "Preparando dashboard e lançamentos...";
+    private string _statusMessage = "Preparando dashboard e módulos...";
 
     private string _filterFrom = string.Empty;
     private string _filterTo = string.Empty;
     private string _selectedFilterType = "Todos";
-    private string _newCustomerName = string.Empty;
 
     private FinancialEntryListItemViewModel? _selectedFinancialEntry;
+    private CustomerListItemViewModel? _selectedCustomer;
     private bool _isBusy;
     private bool _isDeleteConfirmationPending;
     private Guid? _deleteConfirmationEntryId;
@@ -48,6 +48,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public FinancialEntryFormViewModel EntryForm { get; } = new();
+
+    public CustomerFormViewModel CustomerForm { get; } = new();
 
     public ObservableCollection<FinancialEntryListItemViewModel> FinancialEntries { get; } = [];
 
@@ -83,6 +85,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanUpdateSelectedEntry));
             OnPropertyChanged(nameof(CanDeleteSelectedEntry));
             OnPropertyChanged(nameof(CanRegisterCustomer));
+            OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
+            OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
         }
     }
 
@@ -101,6 +105,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public bool CanDeleteSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
 
     public bool CanRegisterCustomer => !IsBusy;
+
+    public bool CanUpdateSelectedCustomer => !IsBusy && SelectedCustomer is not null;
+
+    public bool CanDeleteSelectedCustomer => !IsBusy && SelectedCustomer is not null;
 
     public FinancialEntryListItemViewModel? SelectedFinancialEntry
     {
@@ -123,6 +131,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public CustomerListItemViewModel? SelectedCustomer
+    {
+        get => _selectedCustomer;
+        set
+        {
+            if (!SetProperty(ref _selectedCustomer, value))
+            {
+                return;
+            }
+
+            OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
+            OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
+
+            if (value is null)
+            {
+                CustomerForm.Clear();
+                return;
+            }
+
+            CustomerForm.FillFromSelection(value);
+        }
+    }
+
     public string FilterFrom
     {
         get => _filterFrom;
@@ -139,12 +170,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         get => _selectedFilterType;
         set => SetProperty(ref _selectedFilterType, value);
-    }
-
-    public string NewCustomerName
-    {
-        get => _newCustomerName;
-        set => SetProperty(ref _newCustomerName, value);
     }
 
     public string StatusMessage
@@ -338,16 +363,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            string customerName = NewCustomerName.Trim();
+            CreateCustomerCommand command = CustomerForm.BuildCreateCommand();
+            await _customerService.RegisterAsync(command, cancellationToken);
 
-            if (customerName.Length == 0)
-            {
-                throw new InvalidOperationException("Informe o nome do cliente.");
-            }
-
-            await _customerService.RegisterAsync(new CreateCustomerCommand(Name: customerName), cancellationToken);
-
-            NewCustomerName = string.Empty;
+            SelectedCustomer = null;
             await LoadCustomersAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
 
@@ -356,6 +375,76 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception exception)
         {
             StatusMessage = $"Falha ao cadastrar cliente: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task UpdateSelectedCustomerAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            if (SelectedCustomer is null)
+            {
+                throw new InvalidOperationException("Selecione um cliente para atualizar.");
+            }
+
+            UpdateCustomerCommand command = CustomerForm.BuildUpdateCommand(SelectedCustomer.Id);
+            await _customerService.UpdateAsync(command, cancellationToken);
+
+            await LoadCustomersAsync(cancellationToken, selectedCustomerId: command.Id);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Cliente atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao atualizar cliente: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task DeleteSelectedCustomerAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            if (SelectedCustomer is null)
+            {
+                throw new InvalidOperationException("Selecione um cliente para excluir.");
+            }
+
+            Guid customerId = SelectedCustomer.Id;
+            await _customerService.DeleteAsync(customerId, cancellationToken);
+
+            if (EntryForm.SelectedCustomerId == customerId)
+            {
+                EntryForm.SelectedCustomerId = null;
+            }
+
+            SelectedCustomer = null;
+            await LoadCustomersAsync(cancellationToken);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Cliente excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao excluir cliente: {exception.Message}";
         }
         finally
         {
@@ -390,6 +479,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 description: entry.Description,
                 amount: entry.Amount,
                 occurredOn: entry.OccurredOn,
+                customerId: entry.CustomerId,
                 occurredOnDisplay: entry.OccurredOn.ToString("dd/MM/yyyy", PortugueseCulture),
                 amountDisplay: entry.Amount.ToString("C", PortugueseCulture),
                 entryTypeDisplay: ToEntryTypeLabel(entry.EntryType),
@@ -406,9 +496,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         SelectedFinancialEntry = FinancialEntries.FirstOrDefault(entry => entry.Id == selectedEntryIdToRestore.Value);
     }
 
-    private async Task LoadCustomersAsync(CancellationToken cancellationToken)
+    private async Task LoadCustomersAsync(CancellationToken cancellationToken, Guid? selectedCustomerId = null)
     {
         IReadOnlyList<CustomerListItemDto> customers = await _customerService.ListAsync(cancellationToken);
+
+        Guid? selectedCustomerIdToRestore = selectedCustomerId ?? SelectedCustomer?.Id;
 
         Customers.Clear();
 
@@ -416,7 +508,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             Customers.Add(new CustomerListItemViewModel(
                 id: customer.Id,
-                name: customer.Name));
+                name: customer.Name,
+                email: customer.Email,
+                phone: customer.Phone));
+        }
+
+        if (selectedCustomerIdToRestore is null)
+        {
+            SelectedCustomer = null;
+        }
+        else
+        {
+            SelectedCustomer = Customers.FirstOrDefault(customer => customer.Id == selectedCustomerIdToRestore.Value);
+        }
+
+        if (EntryForm.SelectedCustomerId.HasValue && Customers.All(customer => customer.Id != EntryForm.SelectedCustomerId.Value))
+        {
+            EntryForm.SelectedCustomerId = null;
         }
     }
 

@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 4 em andamento: cleanup de domínio, extração do formulário e fundação do módulo de clientes." />
+      <TextBlock Opacity="0.72" Text="Sprint 5: CRUD de clientes completo, vínculo incremental de cliente em lançamentos e navegação por módulos." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -46,116 +46,173 @@
       </Border>
     </Grid>
 
-    <Grid Grid.Row="2" ColumnDefinitions="1.8*,1.2*" ColumnSpacing="16">
-      <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
-          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-            <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamentos" />
-            <TextBlock Opacity="0.72" Text="{Binding EntriesSummary}" />
-          </StackPanel>
+    <Border Grid.Row="2" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+      <TabControl>
+        <TabItem Header="Lançamentos">
+          <Grid Margin="4" ColumnDefinitions="1.8*,1.2*" ColumnSpacing="16">
+            <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+                <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                  <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamentos" />
+                  <TextBlock Opacity="0.72" Text="{Binding EntriesSummary}" />
+                </StackPanel>
 
-          <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8">
-            <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding FilterFrom}" />
-            <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FilterTo}" />
-            <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding FilterTypeOptions}" SelectedItem="{Binding SelectedFilterType}" />
-            <Button Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding CanApplyFilters}" />
-            <Button Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding CanClearFilters}" />
-          </Grid>
+                <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8">
+                  <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding FilterFrom}" />
+                  <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FilterTo}" />
+                  <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding FilterTypeOptions}" SelectedItem="{Binding SelectedFilterType}" />
+                  <Button Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding CanApplyFilters}" />
+                  <Button Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding CanClearFilters}" />
+                </Grid>
 
-          <Border Grid.Row="2" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10" Padding="0">
-            <Grid RowDefinitions="Auto,*">
-              <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8" Margin="10,8,10,8">
-                <TextBlock FontWeight="SemiBold" Text="Descrição" />
-                <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Data" />
-                <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Valor" />
-                <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="Observações" />
+                <Border Grid.Row="2" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10" Padding="0">
+                  <Grid RowDefinitions="Auto,*">
+                    <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8" Margin="10,8,10,8">
+                      <TextBlock FontWeight="SemiBold" Text="Descrição" />
+                      <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Data" />
+                      <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Valor" />
+                      <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="Observações" />
+                    </Grid>
+
+                    <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding FinancialEntries}" SelectedItem="{Binding SelectedFinancialEntry}">
+                      <ListBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:FinancialEntryListItemViewModel">
+                          <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                            <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8">
+                              <StackPanel Spacing="2">
+                                <TextBlock FontWeight="SemiBold" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
+                                <TextBlock FontSize="12" Opacity="0.72" Text="{Binding EntryTypeDisplay}" />
+                              </StackPanel>
+                              <TextBlock Grid.Column="1" Text="{Binding OccurredOnDisplay}" />
+                              <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding AmountDisplay}" />
+                              <TextBlock Grid.Column="3" MaxLines="2" Opacity="0.85" Text="{Binding NotesDisplay}" TextTrimming="CharacterEllipsis" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                    </ListBox>
+                  </Grid>
+                </Border>
               </Grid>
+            </Border>
 
-              <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding FinancialEntries}" SelectedItem="{Binding SelectedFinancialEntry}">
-                <ListBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:FinancialEntryListItemViewModel">
-                    <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
-                      <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8">
+            <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamento" />
+
+                <StackPanel Grid.Row="1" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Descrição" />
+                  <TextBox Text="{Binding EntryForm.NewEntryDescription}" />
+                </StackPanel>
+
+                <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <StackPanel Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Valor" />
+                    <TextBox Watermark="1500,50" Text="{Binding EntryForm.NewEntryAmount}" />
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Data" />
+                    <TextBox Watermark="yyyy-MM-dd" Text="{Binding EntryForm.NewEntryOccurredOn}" />
+                  </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <StackPanel Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Tipo" />
+                    <ComboBox ItemsSource="{Binding EntryForm.FormEntryTypeOptions}" SelectedItem="{Binding EntryForm.SelectedFormEntryType}" />
+                  </StackPanel>
+
+                  <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Cliente (opcional)" />
+                    <ComboBox
+                        ItemsSource="{Binding Customers}"
+                        SelectedValue="{Binding EntryForm.SelectedCustomerId}"
+                        SelectedValueBinding="{Binding Id}">
+                      <ComboBox.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CustomerListItemViewModel">
+                          <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                      </ComboBox.ItemTemplate>
+                    </ComboBox>
+                  </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Row="4" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Observações" />
+                  <TextBox AcceptsReturn="True" Height="92" Text="{Binding EntryForm.NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
+                </StackPanel>
+
+                <Button Grid.Row="5" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding CanRegisterEntry}" />
+
+                <Grid Grid.Row="6" ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedEntry}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding DeleteSelectedEntryButtonLabel}" IsEnabled="{Binding CanDeleteSelectedEntry}" />
+                </Grid>
+
+                <TextBlock Grid.Row="7" IsVisible="{Binding IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
+              </Grid>
+            </Border>
+          </Grid>
+        </TabItem>
+
+        <TabItem Header="Clientes">
+          <Grid Margin="4" ColumnDefinitions="1.3*,1*" ColumnSpacing="16">
+            <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock FontSize="20" FontWeight="SemiBold" Text="Clientes" />
+                  <TextBlock Opacity="0.72" Text="{Binding CustomersSummary}" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Opacity="0.72" Text="Selecione um cliente para editar ou excluir." />
+
+                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CustomerListItemViewModel">
+                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
                         <StackPanel Spacing="2">
-                          <TextBlock FontWeight="SemiBold" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
-                          <TextBlock FontSize="12" Opacity="0.72" Text="{Binding EntryTypeDisplay}" />
+                          <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                          <TextBlock FontSize="12" Opacity="0.8" Text="{Binding EmailDisplay}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock FontSize="12" Opacity="0.8" Text="{Binding PhoneDisplay}" />
                         </StackPanel>
-                        <TextBlock Grid.Column="1" Text="{Binding OccurredOnDisplay}" />
-                        <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding AmountDisplay}" />
-                        <TextBlock Grid.Column="3" MaxLines="2" Opacity="0.85" Text="{Binding NotesDisplay}" TextTrimming="CharacterEllipsis" />
-                      </Grid>
-                    </Border>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </Grid>
-          </Border>
-        </Grid>
-      </Border>
-
-      <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
-          <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamento" />
-
-          <StackPanel Grid.Row="1" Spacing="4">
-            <TextBlock Opacity="0.72" Text="Descrição" />
-            <TextBox Text="{Binding EntryForm.NewEntryDescription}" />
-          </StackPanel>
-
-          <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-            <StackPanel Spacing="4">
-              <TextBlock Opacity="0.72" Text="Valor" />
-              <TextBox Watermark="1500,50" Text="{Binding EntryForm.NewEntryAmount}" />
-            </StackPanel>
-
-            <StackPanel Grid.Column="1" Spacing="4">
-              <TextBlock Opacity="0.72" Text="Data" />
-              <TextBox Watermark="yyyy-MM-dd" Text="{Binding EntryForm.NewEntryOccurredOn}" />
-            </StackPanel>
-          </Grid>
-
-          <StackPanel Grid.Row="3" Spacing="4">
-            <TextBlock Opacity="0.72" Text="Tipo" />
-            <ComboBox ItemsSource="{Binding EntryForm.FormEntryTypeOptions}" SelectedItem="{Binding EntryForm.SelectedFormEntryType}" />
-          </StackPanel>
-
-          <StackPanel Grid.Row="4" Spacing="4">
-            <TextBlock Opacity="0.72" Text="Observações" />
-            <TextBox AcceptsReturn="True" Height="92" Text="{Binding EntryForm.NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
-          </StackPanel>
-
-          <Button Grid.Row="5" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding CanRegisterEntry}" />
-
-          <Grid Grid.Row="6" ColumnDefinitions="*,*" ColumnSpacing="8">
-            <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedEntry}" />
-            <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding DeleteSelectedEntryButtonLabel}" IsEnabled="{Binding CanDeleteSelectedEntry}" />
-          </Grid>
-
-          <TextBlock Grid.Row="7" IsVisible="{Binding IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
-
-          <Border Grid.Row="8" Padding="10" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10">
-            <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="8">
-              <TextBlock FontSize="16" FontWeight="SemiBold" Text="Clientes (fundação Sprint 4)" />
-              <Grid Grid.Row="1" ColumnDefinitions="*,Auto" ColumnSpacing="8">
-                <TextBox Watermark="Nome do cliente" Text="{Binding NewCustomerName}" />
-                <Button Grid.Column="1" Padding="12,8" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CanRegisterCustomer}" />
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
               </Grid>
-              <TextBlock Grid.Row="2" Opacity="0.72" Text="{Binding CustomersSummary}" />
-              <ListBox Grid.Row="3" Height="110" BorderThickness="0" Background="Transparent" ItemsSource="{Binding Customers}">
-                <ListBox.ItemTemplate>
-                  <DataTemplate x:DataType="vm:CustomerListItemViewModel">
-                    <Border Padding="8,6" BorderBrush="#24303a" BorderThickness="0,0,0,1">
-                      <TextBlock Text="{Binding Name}" />
-                    </Border>
-                  </DataTemplate>
-                </ListBox.ItemTemplate>
-              </ListBox>
-            </Grid>
-          </Border>
+            </Border>
 
-          <TextBlock Grid.Row="9" Opacity="0.65" Text="Selecione um lançamento na lista para editar ou excluir. Campos de vínculo (cliente/produto) seguem para incrementos futuros desta trilha." TextWrapping="Wrap" />
-        </Grid>
-      </Border>
-    </Grid>
+            <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="Formulário de cliente" />
+
+                <StackPanel Grid.Row="1" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Nome" />
+                  <TextBox Watermark="Nome do cliente" Text="{Binding CustomerForm.Name}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Email" />
+                  <TextBox Watermark="contato@empresa.com" Text="{Binding CustomerForm.Email}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Telefone" />
+                  <TextBox Watermark="(41) 99999-9999" Text="{Binding CustomerForm.Phone}" />
+                </StackPanel>
+
+                <Button Grid.Row="4" Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CanRegisterCustomer}" />
+
+                <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="8" VerticalAlignment="Top">
+                  <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedCustomer}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="Excluir selecionado" IsEnabled="{Binding CanDeleteSelectedCustomer}" />
+                </Grid>
+              </Grid>
+            </Border>
+          </Grid>
+        </TabItem>
+      </TabControl>
+    </Border>
   </Grid>
 </Window>

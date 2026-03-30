@@ -15,6 +15,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
     private string _newEntryOccurredOn = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     private string _selectedFormEntryType = "Receita";
     private string _newEntryNotes = string.Empty;
+    private Guid? _selectedCustomerId;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -50,6 +51,12 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         set => SetProperty(ref _newEntryNotes, value);
     }
 
+    public Guid? SelectedCustomerId
+    {
+        get => _selectedCustomerId;
+        set => SetProperty(ref _selectedCustomerId, value);
+    }
+
     public CreateFinancialEntryCommand BuildCreateCommand()
     {
         (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
@@ -59,6 +66,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             Amount: amount,
             OccurredOn: occurredOn,
             EntryType: entryType,
+            CustomerId: SelectedCustomerId,
             Notes: notes);
     }
 
@@ -84,6 +92,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         NewEntryOccurredOn = selectedEntry.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         SelectedFormEntryType = selectedEntry.EntryTypeDisplay;
         NewEntryNotes = selectedEntry.Notes ?? string.Empty;
+        SelectedCustomerId = selectedEntry.CustomerId;
     }
 
     public void Clear()
@@ -93,6 +102,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         NewEntryOccurredOn = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         SelectedFormEntryType = FormEntryTypeOptions[0];
         NewEntryNotes = string.Empty;
+        SelectedCustomerId = null;
     }
 
     private (string Description, decimal Amount, DateOnly OccurredOn, EntryType EntryType, string? Notes) BuildEntryInput()

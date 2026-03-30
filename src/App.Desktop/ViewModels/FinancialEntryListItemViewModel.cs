@@ -7,6 +7,7 @@ public sealed class FinancialEntryListItemViewModel
         string description,
         decimal amount,
         DateOnly occurredOn,
+        Guid? customerId,
         string occurredOnDisplay,
         string amountDisplay,
         string entryTypeDisplay,
@@ -17,6 +18,7 @@ public sealed class FinancialEntryListItemViewModel
         Description = description;
         Amount = amount;
         OccurredOn = occurredOn;
+        CustomerId = customerId;
         OccurredOnDisplay = occurredOnDisplay;
         AmountDisplay = amountDisplay;
         EntryTypeDisplay = entryTypeDisplay;
@@ -31,6 +33,8 @@ public sealed class FinancialEntryListItemViewModel
     public decimal Amount { get; }
 
     public DateOnly OccurredOn { get; }
+
+    public Guid? CustomerId { get; }
 
     public string OccurredOnDisplay { get; }
 
