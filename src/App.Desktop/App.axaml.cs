@@ -50,7 +50,14 @@ public partial class App : Application
             await _serviceProvider.InitializeApplicationAsync();
 
             _uiScope = _serviceProvider.CreateScope();
-            desktopLifetime.MainWindow = _uiScope.ServiceProvider.GetRequiredService<MainWindow>();
+            MainWindow mainWindow = _uiScope.ServiceProvider.GetRequiredService<MainWindow>();
+
+            if (mainWindow.DataContext is MainWindowViewModel viewModel)
+            {
+                await viewModel.InitializeAsync();
+            }
+
+            desktopLifetime.MainWindow = mainWindow;
         }
         catch (Exception exception)
         {

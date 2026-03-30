@@ -5,6 +5,7 @@ using SMEFinanceSuite.Core.Domain.Entities;
 using SMEFinanceSuite.Core.Domain.Enums;
 using SMEFinanceSuite.Core.Infrastructure.Persistence;
 using SMEFinanceSuite.Core.Infrastructure.Services;
+using SMEFinanceSuite.Tests.Integration.TestHelpers;
 using Xunit;
 
 namespace SMEFinanceSuite.Tests.Integration.FinancialEntries;
@@ -125,18 +126,5 @@ public sealed class FinancialEntryServiceTests
 
         Assert.Single(filtered);
         Assert.Equal("Receita C", filtered[0].Description);
-    }
-
-    private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
-    {
-        public AppDbContext CreateDbContext()
-        {
-            return new AppDbContext(options);
-        }
-
-        public ValueTask<AppDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-        {
-            return ValueTask.FromResult(new AppDbContext(options));
-        }
     }
 }

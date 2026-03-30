@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using SMEFinanceSuite.App.Desktop.ViewModels;
 
 namespace SMEFinanceSuite.App.Desktop.Views;
@@ -15,5 +16,29 @@ public partial class MainWindow : Window
         : this()
     {
         DataContext = viewModel;
+    }
+
+    private async void OnApplyFiltersClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.ApplyFiltersAsync();
+        }
+    }
+
+    private async void OnClearFiltersClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.ClearFiltersAsync();
+        }
+    }
+
+    private async void OnRegisterEntryClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.RegisterEntryAsync();
+        }
     }
 }

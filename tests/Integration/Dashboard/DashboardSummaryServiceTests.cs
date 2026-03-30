@@ -4,6 +4,7 @@ using SMEFinanceSuite.Core.Domain.Entities;
 using SMEFinanceSuite.Core.Domain.Enums;
 using SMEFinanceSuite.Core.Infrastructure.Persistence;
 using SMEFinanceSuite.Core.Infrastructure.Services;
+using SMEFinanceSuite.Tests.Integration.TestHelpers;
 using Xunit;
 
 namespace SMEFinanceSuite.Tests.Integration.Dashboard;
@@ -48,18 +49,5 @@ public sealed class DashboardSummaryServiceTests
         Assert.Equal(350m, summary.NetCashFlow);
         Assert.Equal(1, summary.CustomersCount);
         Assert.Equal(1, summary.ProductsCount);
-    }
-
-    private sealed class TestDbContextFactory(DbContextOptions<AppDbContext> options) : IDbContextFactory<AppDbContext>
-    {
-        public AppDbContext CreateDbContext()
-        {
-            return new AppDbContext(options);
-        }
-
-        public ValueTask<AppDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)
-        {
-            return ValueTask.FromResult(new AppDbContext(options));
-        }
     }
 }

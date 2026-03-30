@@ -9,6 +9,12 @@ Solução inicial real, desktop-first, para substituir planilhas por um sistema 
 - **Entity Framework Core + SQLite** para persistência local-first.
 - **xUnit v3** para testes.
 
+## Status das sprints
+
+- **Sprint 1 (concluída)**: vertical slice de lançamentos financeiros com **Register + List**.
+- **Fora de escopo da Sprint 1**: **Update** e **Delete** de lançamentos.
+- **Sprint 2 (iniciada)**: evolução da UI de lançamentos (listagem, cadastro e filtros por período) integrada ao `IFinancialEntryService`.
+
 ## Estrutura
 
 ```text
@@ -52,13 +58,15 @@ dotnet run --project src/App.Desktop/App.Desktop.csproj
 
 ## Banco de dados
 
-Por padrão, o app usa o arquivo SQLite local:
+Por padrão, o app usa SQLite com nome de arquivo configurado em `appsettings.json`:
 
 ```text
 Data Source=sme-finance-suite.db
 ```
 
-O caminho pode ser alterado em `src/App.Desktop/appsettings.json`.
+No desktop, quando o `Data Source` for relativo, o caminho final é resolvido de forma determinística para a pasta de dados do usuário (`LocalApplicationData/SMEFinanceSuite`).
+
+O connection string base pode ser alterado em `src/App.Desktop/appsettings.json`.
 
 ### Migrations (EF Core)
 
@@ -78,7 +86,7 @@ dotnet ef migrations add NomeDaMigration --project src/Core.Infrastructure --sta
 
 ## Próximos passos sugeridos
 
-1. Criar módulo de lançamentos com CRUD completo.
+1. Expandir o módulo de lançamentos com Update/Delete mantendo regras no domínio.
 2. Criar módulo de clientes.
 3. Criar módulo de produtos/serviços.
 4. Adicionar orçamento e ponto de equilíbrio.

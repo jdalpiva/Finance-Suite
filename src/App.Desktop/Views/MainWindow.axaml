@@ -4,19 +4,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:SMEFinanceSuite.App.Desktop.ViewModels"
     x:DataType="vm:MainWindowViewModel"
-    Width="980"
-    Height="640"
-    MinWidth="860"
-    MinHeight="540"
+    Width="1120"
+    Height="720"
+    MinWidth="980"
+    MinHeight="620"
     Title="SME Finance Suite">
-  <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="20">
+  <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Base inicial para substituir planilhas por um sistema financeiro-operacional mais claro e sustentável." />
+      <TextBlock Opacity="0.72" Text="Sprint 2 iniciada: lançamentos com listagem, cadastro e filtros por período." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
-    <Grid Grid.Row="1" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+    <Grid Grid.Row="1" ColumnDefinitions="*,*,*,*" ColumnSpacing="12">
       <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
         <StackPanel Spacing="6">
           <TextBlock FontSize="14" Opacity="0.72" Text="Receita Total" />
@@ -31,14 +31,14 @@
         </StackPanel>
       </Border>
 
-      <Border Grid.Row="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+      <Border Grid.Column="2" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
         <StackPanel Spacing="6">
           <TextBlock FontSize="14" Opacity="0.72" Text="Fluxo de Caixa Líquido" />
           <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding NetCashFlowDisplay}" />
         </StackPanel>
       </Border>
 
-      <Border Grid.Row="1" Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+      <Border Grid.Column="3" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
         <StackPanel Spacing="6">
           <TextBlock FontSize="14" Opacity="0.72" Text="Base Cadastral" />
           <TextBlock FontSize="26" FontWeight="Bold" Text="{Binding RegistrySummary}" />
@@ -46,15 +46,89 @@
       </Border>
     </Grid>
 
-    <Border Grid.Row="2" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-      <StackPanel Spacing="10">
-        <TextBlock FontSize="18" FontWeight="SemiBold" Text="Próximos módulos sugeridos" />
-        <TextBlock Text="• Lançamentos: CRUD completo com filtros por período, categoria e centro de custo." />
-        <TextBlock Text="• Clientes: cadastro, busca, relacionamento com vendas e inadimplência." />
-        <TextBlock Text="• Produtos/Serviços: preço, categoria, margem e status." />
-        <TextBlock Text="• Indicadores: ponto de equilíbrio, margem de contribuição, margem de segurança e fluxo de caixa." />
-        <TextBlock Text="• Evolução SaaS: extrair API mantendo o mesmo domínio e as mesmas regras de negócio." />
-      </StackPanel>
-    </Border>
+    <Grid Grid.Row="2" ColumnDefinitions="1.8*,1.2*" ColumnSpacing="16">
+      <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamentos" />
+            <TextBlock Opacity="0.72" Text="{Binding EntriesSummary}" />
+          </StackPanel>
+
+          <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8">
+            <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding FilterFrom}" />
+            <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FilterTo}" />
+            <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding FilterTypeOptions}" SelectedItem="{Binding SelectedFilterType}" />
+            <Button Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" />
+            <Button Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" />
+          </Grid>
+
+          <Border Grid.Row="2" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10" Padding="0">
+            <Grid RowDefinitions="Auto,*">
+              <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8" Margin="10,8,10,8">
+                <TextBlock FontWeight="SemiBold" Text="Descrição" />
+                <TextBlock Grid.Column="1" FontWeight="SemiBold" Text="Data" />
+                <TextBlock Grid.Column="2" FontWeight="SemiBold" Text="Valor" />
+                <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="Observações" />
+              </Grid>
+
+              <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding FinancialEntries}">
+                <ListBox.ItemTemplate>
+                  <DataTemplate x:DataType="vm:FinancialEntryListItemViewModel">
+                    <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                      <Grid ColumnDefinitions="2*,Auto,Auto,2*" ColumnSpacing="8">
+                        <StackPanel Spacing="2">
+                          <TextBlock FontWeight="SemiBold" Text="{Binding Description}" TextTrimming="CharacterEllipsis" />
+                          <TextBlock FontSize="12" Opacity="0.72" Text="{Binding EntryTypeDisplay}" />
+                        </StackPanel>
+                        <TextBlock Grid.Column="1" Text="{Binding OccurredOnDisplay}" />
+                        <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding AmountDisplay}" />
+                        <TextBlock Grid.Column="3" MaxLines="2" Opacity="0.85" Text="{Binding NotesDisplay}" TextTrimming="CharacterEllipsis" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListBox.ItemTemplate>
+              </ListBox>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+          <TextBlock FontSize="20" FontWeight="SemiBold" Text="Novo lançamento" />
+
+          <StackPanel Grid.Row="1" Spacing="4">
+            <TextBlock Opacity="0.72" Text="Descrição" />
+            <TextBox Text="{Binding NewEntryDescription}" />
+          </StackPanel>
+
+          <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+            <StackPanel Spacing="4">
+              <TextBlock Opacity="0.72" Text="Valor" />
+              <TextBox Watermark="1500,50" Text="{Binding NewEntryAmount}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Spacing="4">
+              <TextBlock Opacity="0.72" Text="Data" />
+              <TextBox Watermark="yyyy-MM-dd" Text="{Binding NewEntryOccurredOn}" />
+            </StackPanel>
+          </Grid>
+
+          <StackPanel Grid.Row="3" Spacing="4">
+            <TextBlock Opacity="0.72" Text="Tipo" />
+            <ComboBox ItemsSource="{Binding FormEntryTypeOptions}" SelectedItem="{Binding SelectedFormEntryType}" />
+          </StackPanel>
+
+          <StackPanel Grid.Row="4" Spacing="4">
+            <TextBlock Opacity="0.72" Text="Observações" />
+            <TextBox AcceptsReturn="True" Height="92" Text="{Binding NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
+          </StackPanel>
+
+          <Button Grid.Row="5" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" />
+
+          <TextBlock Grid.Row="6" Opacity="0.65" Text="Campos de vínculo (cliente/produto) seguem para incrementos futuros desta trilha de lançamentos." TextWrapping="Wrap" />
+        </Grid>
+      </Border>
+    </Grid>
   </Grid>
 </Window>
