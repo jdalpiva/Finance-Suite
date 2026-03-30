@@ -60,15 +60,4 @@ public sealed class FinancialEntry : AuditableEntity
         Touch();
     }
 
-    public void Reclassify(EntryType entryType)
-    {
-        EntryType = entryType;
-        Touch();
-    }
-
-    public void UpdateDescription(string description)
-    {
-        Description = Guard.AgainstNullOrWhiteSpace(description, nameof(description), 160);
-        Touch();
-    }
 }

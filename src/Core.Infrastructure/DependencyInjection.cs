@@ -18,6 +18,7 @@ public static class DependencyInjection
 
         services.AddScoped<IFinancialDashboardService, DashboardSummaryService>();
         services.AddScoped<IFinancialEntryService, FinancialEntryService>();
+        services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IApplicationInitializer, DatabaseInitializer>();
 
         return services;

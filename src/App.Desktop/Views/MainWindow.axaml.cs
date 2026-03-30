@@ -57,4 +57,12 @@ public partial class MainWindow : Window
             await viewModel.DeleteSelectedEntryAsync();
         }
     }
+
+    private async void OnRegisterCustomerClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.RegisterCustomerAsync();
+        }
+    }
 }

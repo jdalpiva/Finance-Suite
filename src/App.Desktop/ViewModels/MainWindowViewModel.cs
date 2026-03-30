@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using SMEFinanceSuite.Core.Application.Abstractions;
+using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Application.Dashboard;
 using SMEFinanceSuite.Core.Application.FinancialEntries;
 using SMEFinanceSuite.Core.Domain.Enums;
@@ -16,39 +17,43 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private readonly IFinancialDashboardService _financialDashboardService;
     private readonly IFinancialEntryService _financialEntryService;
+    private readonly ICustomerService _customerService;
+
     private DashboardSummaryDto _summary = DashboardSummaryDto.Empty;
     private string _statusMessage = "Preparando dashboard e lançamentos...";
 
     private string _filterFrom = string.Empty;
     private string _filterTo = string.Empty;
     private string _selectedFilterType = "Todos";
-
-    private string _newEntryDescription = string.Empty;
-    private string _newEntryAmount = string.Empty;
-    private string _newEntryOccurredOn = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-    private string _selectedFormEntryType = "Receita";
-    private string _newEntryNotes = string.Empty;
+    private string _newCustomerName = string.Empty;
 
     private FinancialEntryListItemViewModel? _selectedFinancialEntry;
     private bool _isBusy;
+    private bool _isDeleteConfirmationPending;
+    private Guid? _deleteConfirmationEntryId;
 
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
-        IFinancialEntryService financialEntryService)
+        IFinancialEntryService financialEntryService,
+        ICustomerService customerService)
     {
         _financialDashboardService = financialDashboardService;
         _financialEntryService = financialEntryService;
+        _customerService = customerService;
 
         FinancialEntries.CollectionChanged += OnFinancialEntriesChanged;
+        Customers.CollectionChanged += OnCustomersChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
+    public FinancialEntryFormViewModel EntryForm { get; } = new();
+
     public ObservableCollection<FinancialEntryListItemViewModel> FinancialEntries { get; } = [];
 
-    public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
+    public ObservableCollection<CustomerListItemViewModel> Customers { get; } = [];
 
-    public IReadOnlyList<string> FormEntryTypeOptions { get; } = ["Receita", "Despesa"];
+    public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
 
     public string TotalRevenueDisplay => _summary.TotalRevenue.ToString("C", PortugueseCulture);
 
@@ -59,6 +64,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public string RegistrySummary => $"{_summary.CustomersCount} clientes • {_summary.ProductsCount} itens";
 
     public string EntriesSummary => $"{FinancialEntries.Count} lançamentos";
+
+    public string CustomersSummary => $"{Customers.Count} clientes cadastrados";
 
     public bool IsBusy
     {
@@ -75,8 +82,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanRegisterEntry));
             OnPropertyChanged(nameof(CanUpdateSelectedEntry));
             OnPropertyChanged(nameof(CanDeleteSelectedEntry));
+            OnPropertyChanged(nameof(CanRegisterCustomer));
         }
     }
+
+    public bool IsDeleteConfirmationPending => _isDeleteConfirmationPending;
+
+    public string DeleteSelectedEntryButtonLabel => IsDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
 
     public bool CanApplyFilters => !IsBusy;
 
@@ -88,6 +100,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public bool CanDeleteSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
 
+    public bool CanRegisterCustomer => !IsBusy;
+
     public FinancialEntryListItemViewModel? SelectedFinancialEntry
     {
         get => _selectedFinancialEntry;
@@ -98,12 +112,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
+            ResetDeleteConfirmation();
             OnPropertyChanged(nameof(CanUpdateSelectedEntry));
             OnPropertyChanged(nameof(CanDeleteSelectedEntry));
 
             if (value is not null)
             {
-                FillEntryFormFromSelection(value);
+                EntryForm.FillFromSelection(value);
             }
         }
     }
@@ -126,34 +141,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         set => SetProperty(ref _selectedFilterType, value);
     }
 
-    public string NewEntryDescription
+    public string NewCustomerName
     {
-        get => _newEntryDescription;
-        set => SetProperty(ref _newEntryDescription, value);
-    }
-
-    public string NewEntryAmount
-    {
-        get => _newEntryAmount;
-        set => SetProperty(ref _newEntryAmount, value);
-    }
-
-    public string NewEntryOccurredOn
-    {
-        get => _newEntryOccurredOn;
-        set => SetProperty(ref _newEntryOccurredOn, value);
-    }
-
-    public string SelectedFormEntryType
-    {
-        get => _selectedFormEntryType;
-        set => SetProperty(ref _selectedFormEntryType, value);
-    }
-
-    public string NewEntryNotes
-    {
-        get => _newEntryNotes;
-        set => SetProperty(ref _newEntryNotes, value);
+        get => _newCustomerName;
+        set => SetProperty(ref _newCustomerName, value);
     }
 
     public string StatusMessage
@@ -168,7 +159,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             await LoadDashboardAsync(cancellationToken);
             await LoadEntriesAsync(cancellationToken);
-            StatusMessage = $"Dashboard e lançamentos carregados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            await LoadCustomersAsync(cancellationToken);
+            StatusMessage = $"Dashboard e módulos carregados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
@@ -185,6 +177,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
+            ResetDeleteConfirmation();
             await LoadEntriesAsync(cancellationToken);
             StatusMessage = $"Filtros aplicados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -211,6 +204,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             FilterTo = string.Empty;
             SelectedFilterType = FilterTypeOptions[0];
 
+            ResetDeleteConfirmation();
             await LoadEntriesAsync(cancellationToken);
             StatusMessage = $"Filtros limpos em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -233,11 +227,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            CreateFinancialEntryCommand command = BuildCreateCommand();
+            CreateFinancialEntryCommand command = EntryForm.BuildCreateCommand();
             await _financialEntryService.RegisterAsync(command, cancellationToken);
 
             SelectedFinancialEntry = null;
-            ClearEntryForm();
+            EntryForm.Clear();
+            ResetDeleteConfirmation();
             await LoadEntriesAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
 
@@ -267,9 +262,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 throw new InvalidOperationException("Selecione um lançamento para atualizar.");
             }
 
-            UpdateFinancialEntryCommand command = BuildUpdateCommand(SelectedFinancialEntry.Id);
+            UpdateFinancialEntryCommand command = EntryForm.BuildUpdateCommand(SelectedFinancialEntry.Id);
             await _financialEntryService.UpdateAsync(command, cancellationToken);
 
+            ResetDeleteConfirmation();
             await LoadEntriesAsync(cancellationToken, selectedEntryId: command.Id);
             await LoadDashboardAsync(cancellationToken);
 
@@ -287,6 +283,24 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public async Task DeleteSelectedEntryAsync(CancellationToken cancellationToken = default)
     {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        if (SelectedFinancialEntry is null)
+        {
+            StatusMessage = "Selecione um lançamento para excluir.";
+            return;
+        }
+
+        if (!IsDeleteConfirmationPending || _deleteConfirmationEntryId != SelectedFinancialEntry.Id)
+        {
+            SetDeleteConfirmation(SelectedFinancialEntry.Id);
+            StatusMessage = "Confirme a exclusão clicando novamente no botão.";
+            return;
+        }
+
         if (!TryBeginBusyOperation())
         {
             return;
@@ -294,16 +308,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            if (SelectedFinancialEntry is null)
-            {
-                throw new InvalidOperationException("Selecione um lançamento para excluir.");
-            }
-
             Guid selectedEntryId = SelectedFinancialEntry.Id;
             await _financialEntryService.DeleteAsync(selectedEntryId, cancellationToken);
 
             SelectedFinancialEntry = null;
-            ClearEntryForm();
+            EntryForm.Clear();
+            ResetDeleteConfirmation();
             await LoadEntriesAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
 
@@ -312,6 +322,40 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception exception)
         {
             StatusMessage = $"Falha ao excluir lançamento: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task RegisterCustomerAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            string customerName = NewCustomerName.Trim();
+
+            if (customerName.Length == 0)
+            {
+                throw new InvalidOperationException("Informe o nome do cliente.");
+            }
+
+            await _customerService.RegisterAsync(new CreateCustomerCommand(Name: customerName), cancellationToken);
+
+            NewCustomerName = string.Empty;
+            await LoadCustomersAsync(cancellationToken);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Cliente cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao cadastrar cliente: {exception.Message}";
         }
         finally
         {
@@ -362,6 +406,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         SelectedFinancialEntry = FinancialEntries.FirstOrDefault(entry => entry.Id == selectedEntryIdToRestore.Value);
     }
 
+    private async Task LoadCustomersAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<CustomerListItemDto> customers = await _customerService.ListAsync(cancellationToken);
+
+        Customers.Clear();
+
+        foreach (CustomerListItemDto customer in customers)
+        {
+            Customers.Add(new CustomerListItemViewModel(
+                id: customer.Id,
+                name: customer.Name));
+        }
+    }
+
     private FinancialEntriesFilter BuildFilter()
     {
         DateOnly? from = ParseOptionalDate(FilterFrom, "Data inicial");
@@ -377,74 +435,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         return new FinancialEntriesFilter(From: from, To: to, EntryType: entryType);
     }
 
-    private CreateFinancialEntryCommand BuildCreateCommand()
+    private void SetDeleteConfirmation(Guid entryId)
     {
-        (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
-
-        return new CreateFinancialEntryCommand(
-            Description: description,
-            Amount: amount,
-            OccurredOn: occurredOn,
-            EntryType: entryType,
-            Notes: notes);
+        _isDeleteConfirmationPending = true;
+        _deleteConfirmationEntryId = entryId;
+        OnPropertyChanged(nameof(IsDeleteConfirmationPending));
+        OnPropertyChanged(nameof(DeleteSelectedEntryButtonLabel));
     }
 
-    private UpdateFinancialEntryCommand BuildUpdateCommand(Guid id)
+    private void ResetDeleteConfirmation()
     {
-        (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
-
-        return new UpdateFinancialEntryCommand(
-            Id: id,
-            Description: description,
-            Amount: amount,
-            OccurredOn: occurredOn,
-            EntryType: entryType,
-            Notes: notes);
-    }
-
-    private (string Description, decimal Amount, DateOnly OccurredOn, EntryType EntryType, string? Notes) BuildEntryInput()
-    {
-        string description = NewEntryDescription.Trim();
-
-        if (description.Length == 0)
+        if (!_isDeleteConfirmationPending && _deleteConfirmationEntryId is null)
         {
-            throw new InvalidOperationException("Informe a descrição do lançamento.");
+            return;
         }
 
-        if (!TryParseAmount(NewEntryAmount, out decimal amount))
-        {
-            throw new InvalidOperationException("Informe um valor válido. Exemplo: 1500,50");
-        }
-
-        DateOnly occurredOn = ParseRequiredDate(NewEntryOccurredOn, "Data do lançamento");
-
-        EntryType entryType = SelectedFormEntryType == "Despesa"
-            ? EntryType.Expense
-            : EntryType.Revenue;
-
-        string? notes = string.IsNullOrWhiteSpace(NewEntryNotes)
-            ? null
-            : NewEntryNotes.Trim();
-
-        return (description, amount, occurredOn, entryType, notes);
-    }
-
-    private void FillEntryFormFromSelection(FinancialEntryListItemViewModel selectedEntry)
-    {
-        NewEntryDescription = selectedEntry.Description;
-        NewEntryAmount = selectedEntry.Amount.ToString("0.00", PortugueseCulture);
-        NewEntryOccurredOn = selectedEntry.OccurredOn.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        SelectedFormEntryType = selectedEntry.EntryTypeDisplay;
-        NewEntryNotes = selectedEntry.Notes ?? string.Empty;
-    }
-
-    private void ClearEntryForm()
-    {
-        NewEntryDescription = string.Empty;
-        NewEntryAmount = string.Empty;
-        NewEntryOccurredOn = DateOnly.FromDateTime(DateTime.Today).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-        SelectedFormEntryType = FormEntryTypeOptions[0];
-        NewEntryNotes = string.Empty;
+        _isDeleteConfirmationPending = false;
+        _deleteConfirmationEntryId = null;
+        OnPropertyChanged(nameof(IsDeleteConfirmationPending));
+        OnPropertyChanged(nameof(DeleteSelectedEntryButtonLabel));
     }
 
     private bool TryBeginBusyOperation()
@@ -461,26 +470,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void EndBusyOperation()
     {
         IsBusy = false;
-    }
-
-    private static bool TryParseAmount(string rawAmount, out decimal amount)
-    {
-        if (decimal.TryParse(rawAmount, NumberStyles.Number, PortugueseCulture, out amount))
-        {
-            return true;
-        }
-
-        return decimal.TryParse(rawAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out amount);
-    }
-
-    private static DateOnly ParseRequiredDate(string rawDate, string fieldName)
-    {
-        if (TryParseDate(rawDate, out DateOnly parsedDate))
-        {
-            return parsedDate;
-        }
-
-        throw new InvalidOperationException($"{fieldName} inválida. Use yyyy-MM-dd.");
     }
 
     private static DateOnly? ParseOptionalDate(string rawDate, string fieldName)
@@ -533,6 +522,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnFinancialEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(EntriesSummary));
+    }
+
+    private void OnCustomersChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(CustomersSummary));
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
