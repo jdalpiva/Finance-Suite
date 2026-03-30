@@ -39,4 +39,6 @@ public sealed class ProductServiceListItemViewModel
     public string UnitPriceDisplay => UnitPrice.ToString("C", PortugueseCulture);
 
     public string ActiveDisplay => IsActive ? "Ativo" : "Inativo";
+
+    public double RowOpacity => IsActive ? 1.0 : 0.62;
 }

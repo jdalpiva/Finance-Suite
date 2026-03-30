@@ -89,4 +89,20 @@ public partial class MainWindow : Window
             await viewModel.RegisterProductServiceAsync();
         }
     }
+
+    private async void OnUpdateSelectedProductServiceClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.UpdateSelectedProductServiceAsync();
+        }
+    }
+
+    private async void OnDeleteSelectedProductServiceClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.DeleteSelectedProductServiceAsync();
+        }
+    }
 }

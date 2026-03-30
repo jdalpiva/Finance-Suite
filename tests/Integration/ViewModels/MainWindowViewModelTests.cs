@@ -32,20 +32,20 @@ public sealed class MainWindowViewModelTests
             productCatalogService: new FakeProductCatalogService());
 
         await viewModel.InitializeAsync(cancellationToken);
-        viewModel.SelectedCustomer = Assert.Single(viewModel.Customers);
+        viewModel.CustomersModule.SelectedCustomer = Assert.Single(viewModel.CustomersModule.Customers);
 
         await viewModel.DeleteSelectedCustomerAsync(cancellationToken);
 
-        Assert.True(viewModel.IsCustomerDeleteConfirmationPending);
-        Assert.Equal("Confirmar exclusão", viewModel.DeleteSelectedCustomerButtonLabel);
+        Assert.True(viewModel.CustomersModule.IsDeleteConfirmationPending);
+        Assert.Equal("Confirmar exclusão", viewModel.CustomersModule.DeleteSelectedButtonLabel);
         Assert.Equal(0, customerService.DeleteCalls);
 
         await viewModel.DeleteSelectedCustomerAsync(cancellationToken);
 
-        Assert.False(viewModel.IsCustomerDeleteConfirmationPending);
-        Assert.Equal("Excluir selecionado", viewModel.DeleteSelectedCustomerButtonLabel);
+        Assert.False(viewModel.CustomersModule.IsDeleteConfirmationPending);
+        Assert.Equal("Excluir selecionado", viewModel.CustomersModule.DeleteSelectedButtonLabel);
         Assert.Equal(1, customerService.DeleteCalls);
-        Assert.Empty(viewModel.Customers);
+        Assert.Empty(viewModel.CustomersModule.Customers);
     }
 
     private sealed class FakeDashboardService : IFinancialDashboardService
@@ -112,6 +112,16 @@ public sealed class MainWindowViewModelTests
     private sealed class FakeProductCatalogService : IProductCatalogService
     {
         public Task<Guid> RegisterAsync(CreateProductServiceCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task UpdateAsync(UpdateProductServiceCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
         }

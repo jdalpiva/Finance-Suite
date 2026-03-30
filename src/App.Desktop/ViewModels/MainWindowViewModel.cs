@@ -4,10 +4,8 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Runtime.CompilerServices;
 using SMEFinanceSuite.Core.Application.Abstractions;
-using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Application.Dashboard;
 using SMEFinanceSuite.Core.Application.FinancialEntries;
-using SMEFinanceSuite.Core.Application.ProductServices;
 using SMEFinanceSuite.Core.Domain.Enums;
 
 namespace SMEFinanceSuite.App.Desktop.ViewModels;
@@ -18,8 +16,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     private readonly IFinancialDashboardService _financialDashboardService;
     private readonly IFinancialEntryService _financialEntryService;
-    private readonly ICustomerService _customerService;
-    private readonly IProductCatalogService _productCatalogService;
 
     private DashboardSummaryDto _summary = DashboardSummaryDto.Empty;
     private string _statusMessage = "Preparando dashboard e módulos...";
@@ -29,12 +25,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private string _selectedFilterType = "Todos";
 
     private FinancialEntryListItemViewModel? _selectedFinancialEntry;
-    private CustomerListItemViewModel? _selectedCustomer;
     private bool _isBusy;
     private bool _isDeleteConfirmationPending;
     private Guid? _deleteConfirmationEntryId;
-    private bool _isCustomerDeleteConfirmationPending;
-    private Guid? _deleteConfirmationCustomerId;
 
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
@@ -44,27 +37,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     {
         _financialDashboardService = financialDashboardService;
         _financialEntryService = financialEntryService;
-        _customerService = customerService;
-        _productCatalogService = productCatalogService;
+
+        CustomersModule = new CustomersModuleViewModel(customerService);
+        ProductCatalogModule = new ProductCatalogModuleViewModel(productCatalogService);
 
         FinancialEntries.CollectionChanged += OnFinancialEntriesChanged;
-        Customers.CollectionChanged += OnCustomersChanged;
-        ProductServices.CollectionChanged += OnProductServicesChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
     public FinancialEntryFormViewModel EntryForm { get; } = new();
 
-    public CustomerFormViewModel CustomerForm { get; } = new();
+    public CustomersModuleViewModel CustomersModule { get; }
 
-    public ProductServiceFormViewModel ProductServiceForm { get; } = new();
+    public ProductCatalogModuleViewModel ProductCatalogModule { get; }
 
     public ObservableCollection<FinancialEntryListItemViewModel> FinancialEntries { get; } = [];
-
-    public ObservableCollection<CustomerListItemViewModel> Customers { get; } = [];
-
-    public ObservableCollection<ProductServiceListItemViewModel> ProductServices { get; } = [];
 
     public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
 
@@ -78,10 +66,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public string EntriesSummary => $"{FinancialEntries.Count} lançamentos";
 
-    public string CustomersSummary => $"{Customers.Count} clientes cadastrados";
-
-    public string ProductServicesSummary => $"{ProductServices.Count} itens cadastrados";
-
     public bool IsBusy
     {
         get => _isBusy;
@@ -92,25 +76,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
+            CustomersModule.SetBusy(value);
+            ProductCatalogModule.SetBusy(value);
+
             OnPropertyChanged(nameof(CanApplyFilters));
             OnPropertyChanged(nameof(CanClearFilters));
             OnPropertyChanged(nameof(CanRegisterEntry));
             OnPropertyChanged(nameof(CanUpdateSelectedEntry));
             OnPropertyChanged(nameof(CanDeleteSelectedEntry));
-            OnPropertyChanged(nameof(CanRegisterCustomer));
-            OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
-            OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
-            OnPropertyChanged(nameof(CanRegisterProductService));
         }
     }
 
     public bool IsDeleteConfirmationPending => _isDeleteConfirmationPending;
 
     public string DeleteSelectedEntryButtonLabel => IsDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
-
-    public bool IsCustomerDeleteConfirmationPending => _isCustomerDeleteConfirmationPending;
-
-    public string DeleteSelectedCustomerButtonLabel => IsCustomerDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
 
     public bool CanApplyFilters => !IsBusy;
 
@@ -121,14 +100,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public bool CanUpdateSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
 
     public bool CanDeleteSelectedEntry => !IsBusy && SelectedFinancialEntry is not null;
-
-    public bool CanRegisterCustomer => !IsBusy;
-
-    public bool CanUpdateSelectedCustomer => !IsBusy && SelectedCustomer is not null;
-
-    public bool CanDeleteSelectedCustomer => !IsBusy && SelectedCustomer is not null;
-
-    public bool CanRegisterProductService => !IsBusy;
 
     public FinancialEntryListItemViewModel? SelectedFinancialEntry
     {
@@ -147,31 +118,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             if (value is not null)
             {
                 EntryForm.FillFromSelection(value);
+                SyncEntryFormReferences();
             }
-        }
-    }
-
-    public CustomerListItemViewModel? SelectedCustomer
-    {
-        get => _selectedCustomer;
-        set
-        {
-            if (!SetProperty(ref _selectedCustomer, value))
-            {
-                return;
-            }
-
-            OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
-            OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
-            ResetCustomerDeleteConfirmation();
-
-            if (value is null)
-            {
-                CustomerForm.Clear();
-                return;
-            }
-
-            CustomerForm.FillFromSelection(value);
         }
     }
 
@@ -205,8 +153,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             await LoadDashboardAsync(cancellationToken);
             await LoadEntriesAsync(cancellationToken);
-            await LoadCustomersAsync(cancellationToken);
-            await LoadProductServicesAsync(cancellationToken);
+            await CustomersModule.LoadAsync(cancellationToken);
+            await ProductCatalogModule.LoadAsync(cancellationToken);
+            SyncEntryFormReferences();
+
             StatusMessage = $"Dashboard e módulos carregados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
@@ -385,12 +335,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            CreateCustomerCommand command = CustomerForm.BuildCreateCommand();
-            await _customerService.RegisterAsync(command, cancellationToken);
-
-            SelectedCustomer = null;
-            ResetCustomerDeleteConfirmation();
-            await LoadCustomersAsync(cancellationToken);
+            await CustomersModule.RegisterAsync(cancellationToken);
+            SyncEntryFormReferences();
             await LoadDashboardAsync(cancellationToken);
 
             StatusMessage = $"Cliente cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
@@ -414,16 +360,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            if (SelectedCustomer is null)
-            {
-                throw new InvalidOperationException("Selecione um cliente para atualizar.");
-            }
-
-            UpdateCustomerCommand command = CustomerForm.BuildUpdateCommand(SelectedCustomer.Id);
-            await _customerService.UpdateAsync(command, cancellationToken);
-
-            ResetCustomerDeleteConfirmation();
-            await LoadCustomersAsync(cancellationToken, selectedCustomerId: command.Id);
+            await CustomersModule.UpdateSelectedAsync(cancellationToken);
+            SyncEntryFormReferences();
             await LoadDashboardAsync(cancellationToken);
 
             StatusMessage = $"Cliente atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
@@ -445,15 +383,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
-        if (SelectedCustomer is null)
+        CustomerDeleteRequest request = CustomersModule.RequestDeleteSelected();
+
+        if (request.State == CustomerDeleteRequestState.NoSelection)
         {
             StatusMessage = "Selecione um cliente para excluir.";
             return;
         }
 
-        if (!IsCustomerDeleteConfirmationPending || _deleteConfirmationCustomerId != SelectedCustomer.Id)
+        if (request.State == CustomerDeleteRequestState.ConfirmationRequired)
         {
-            SetCustomerDeleteConfirmation(SelectedCustomer.Id);
             StatusMessage = "Confirme a exclusão do cliente clicando novamente no botão.";
             return;
         }
@@ -465,17 +404,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            Guid customerId = SelectedCustomer.Id;
-            await _customerService.DeleteAsync(customerId, cancellationToken);
-
-            if (EntryForm.SelectedCustomerId == customerId)
-            {
-                EntryForm.SelectedCustomerId = null;
-            }
-
-            SelectedCustomer = null;
-            ResetCustomerDeleteConfirmation();
-            await LoadCustomersAsync(cancellationToken);
+            await CustomersModule.DeleteConfirmedAsync(request.TargetCustomerId, cancellationToken);
+            SyncEntryFormReferences();
             await LoadDashboardAsync(cancellationToken);
 
             StatusMessage = $"Cliente excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
@@ -499,11 +429,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         try
         {
-            CreateProductServiceCommand command = ProductServiceForm.BuildCreateCommand();
-            await _productCatalogService.RegisterAsync(command, cancellationToken);
-
-            ProductServiceForm.Clear();
-            await LoadProductServicesAsync(cancellationToken);
+            await ProductCatalogModule.RegisterAsync(cancellationToken);
+            SyncEntryFormReferences();
             await LoadDashboardAsync(cancellationToken);
 
             StatusMessage = $"Produto/serviço cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
@@ -511,6 +438,75 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         catch (Exception exception)
         {
             StatusMessage = $"Falha ao cadastrar produto/serviço: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task UpdateSelectedProductServiceAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            await ProductCatalogModule.UpdateSelectedAsync(cancellationToken);
+            SyncEntryFormReferences();
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Produto/serviço atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao atualizar produto/serviço: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
+    public async Task DeleteSelectedProductServiceAsync(CancellationToken cancellationToken = default)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        ProductDeleteRequest request = ProductCatalogModule.RequestDeleteSelected();
+
+        if (request.State == ProductDeleteRequestState.NoSelection)
+        {
+            StatusMessage = "Selecione um produto/serviço para excluir.";
+            return;
+        }
+
+        if (request.State == ProductDeleteRequestState.ConfirmationRequired)
+        {
+            StatusMessage = "Confirme a exclusão do produto/serviço clicando novamente no botão.";
+            return;
+        }
+
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            await ProductCatalogModule.DeleteConfirmedAsync(request.TargetProductServiceId, cancellationToken);
+            SyncEntryFormReferences();
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Produto/serviço excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao excluir produto/serviço: {exception.Message}";
         }
         finally
         {
@@ -563,56 +559,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         SelectedFinancialEntry = FinancialEntries.FirstOrDefault(entry => entry.Id == selectedEntryIdToRestore.Value);
     }
 
-    private async Task LoadCustomersAsync(CancellationToken cancellationToken, Guid? selectedCustomerId = null)
+    private void SyncEntryFormReferences()
     {
-        IReadOnlyList<CustomerListItemDto> customers = await _customerService.ListAsync(cancellationToken);
-
-        Guid? selectedCustomerIdToRestore = selectedCustomerId ?? SelectedCustomer?.Id;
-
-        Customers.Clear();
-
-        foreach (CustomerListItemDto customer in customers)
-        {
-            Customers.Add(new CustomerListItemViewModel(
-                id: customer.Id,
-                name: customer.Name,
-                email: customer.Email,
-                phone: customer.Phone));
-        }
-
-        if (selectedCustomerIdToRestore is null)
-        {
-            SelectedCustomer = null;
-        }
-        else
-        {
-            SelectedCustomer = Customers.FirstOrDefault(customer => customer.Id == selectedCustomerIdToRestore.Value);
-        }
-
-        if (EntryForm.SelectedCustomerId.HasValue && Customers.All(customer => customer.Id != EntryForm.SelectedCustomerId.Value))
+        if (EntryForm.SelectedCustomerId.HasValue && !CustomersModule.ContainsCustomer(EntryForm.SelectedCustomerId.Value))
         {
             EntryForm.SelectedCustomerId = null;
         }
-    }
 
-    private async Task LoadProductServicesAsync(CancellationToken cancellationToken)
-    {
-        IReadOnlyList<ProductServiceListItemDto> items = await _productCatalogService.ListAsync(cancellationToken);
-
-        ProductServices.Clear();
-
-        foreach (ProductServiceListItemDto item in items)
+        if (!EntryForm.SelectedProductServiceId.HasValue)
         {
-            ProductServices.Add(new ProductServiceListItemViewModel(
-                id: item.Id,
-                name: item.Name,
-                category: item.Category,
-                unitPrice: item.UnitPrice,
-                isService: item.IsService,
-                isActive: item.IsActive));
+            return;
         }
 
-        if (EntryForm.SelectedProductServiceId.HasValue && ProductServices.All(item => item.Id != EntryForm.SelectedProductServiceId.Value))
+        Guid selectedProductServiceId = EntryForm.SelectedProductServiceId.Value;
+
+        if (!ProductCatalogModule.ContainsProductService(selectedProductServiceId)
+            || !ProductCatalogModule.IsActiveProductService(selectedProductServiceId))
         {
             EntryForm.SelectedProductServiceId = null;
         }
@@ -652,27 +614,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         _deleteConfirmationEntryId = null;
         OnPropertyChanged(nameof(IsDeleteConfirmationPending));
         OnPropertyChanged(nameof(DeleteSelectedEntryButtonLabel));
-    }
-
-    private void SetCustomerDeleteConfirmation(Guid customerId)
-    {
-        _isCustomerDeleteConfirmationPending = true;
-        _deleteConfirmationCustomerId = customerId;
-        OnPropertyChanged(nameof(IsCustomerDeleteConfirmationPending));
-        OnPropertyChanged(nameof(DeleteSelectedCustomerButtonLabel));
-    }
-
-    private void ResetCustomerDeleteConfirmation()
-    {
-        if (!_isCustomerDeleteConfirmationPending && _deleteConfirmationCustomerId is null)
-        {
-            return;
-        }
-
-        _isCustomerDeleteConfirmationPending = false;
-        _deleteConfirmationCustomerId = null;
-        OnPropertyChanged(nameof(IsCustomerDeleteConfirmationPending));
-        OnPropertyChanged(nameof(DeleteSelectedCustomerButtonLabel));
     }
 
     private bool TryBeginBusyOperation()
@@ -741,16 +682,6 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnFinancialEntriesChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(EntriesSummary));
-    }
-
-    private void OnCustomersChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(CustomersSummary));
-    }
-
-    private void OnProductServicesChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        OnPropertyChanged(nameof(ProductServicesSummary));
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)

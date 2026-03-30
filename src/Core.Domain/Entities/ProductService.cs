@@ -27,9 +27,27 @@ public sealed class ProductService : AuditableEntity
 
     public bool IsActive { get; private set; }
 
+    public void Rename(string name)
+    {
+        Name = Guard.AgainstNullOrWhiteSpace(name, nameof(name), 120);
+        Touch();
+    }
+
+    public void UpdateCategory(string category)
+    {
+        Category = Guard.AgainstNullOrWhiteSpace(category, nameof(category), 80);
+        Touch();
+    }
+
     public void UpdatePricing(decimal unitPrice)
     {
         UnitPrice = Guard.AgainstInvalidMonetaryAmount(unitPrice, nameof(unitPrice));
+        Touch();
+    }
+
+    public void UpdateKind(bool isService)
+    {
+        IsService = isService;
         Touch();
     }
 

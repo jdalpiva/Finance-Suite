@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 6: fundação de Produtos/Serviços e vínculo incremental de produto/serviço em lançamentos." />
+      <TextBlock Opacity="0.72" Text="Sprint 7: extração de módulos de UI e CRUD completo de Produtos/Serviços." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -126,7 +126,7 @@
                   <StackPanel Grid.Column="1" Spacing="4">
                     <TextBlock Opacity="0.72" Text="Cliente (opcional)" />
                     <ComboBox
-                        ItemsSource="{Binding Customers}"
+                        ItemsSource="{Binding CustomersModule.Customers}"
                         SelectedValue="{Binding EntryForm.SelectedCustomerId}"
                         SelectedValueBinding="{Binding Id}">
                       <ComboBox.ItemTemplate>
@@ -141,7 +141,7 @@
                 <StackPanel Grid.Row="4" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Produto/serviço (opcional)" />
                   <ComboBox
-                      ItemsSource="{Binding ProductServices}"
+                      ItemsSource="{Binding ProductCatalogModule.ActiveProductServices}"
                       SelectedValue="{Binding EntryForm.SelectedProductServiceId}"
                       SelectedValueBinding="{Binding Id}">
                     <ComboBox.ItemTemplate>
@@ -176,12 +176,12 @@
               <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock FontSize="20" FontWeight="SemiBold" Text="Clientes" />
-                  <TextBlock Opacity="0.72" Text="{Binding CustomersSummary}" />
+                  <TextBlock Opacity="0.72" Text="{Binding CustomersModule.Summary}" />
                 </StackPanel>
 
                 <TextBlock Grid.Row="1" Opacity="0.72" Text="Selecione um cliente para editar ou excluir." />
 
-                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding Customers}" SelectedItem="{Binding SelectedCustomer}">
+                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding CustomersModule.Customers}" SelectedItem="{Binding CustomersModule.SelectedCustomer}">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:CustomerListItemViewModel">
                       <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
@@ -203,26 +203,26 @@
 
                 <StackPanel Grid.Row="1" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Nome" />
-                  <TextBox Watermark="Nome do cliente" Text="{Binding CustomerForm.Name}" />
+                  <TextBox Watermark="Nome do cliente" Text="{Binding CustomersModule.Form.Name}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Email" />
-                  <TextBox Watermark="contato@empresa.com" Text="{Binding CustomerForm.Email}" />
+                  <TextBox Watermark="contato@empresa.com" Text="{Binding CustomersModule.Form.Email}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="3" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Telefone" />
-                  <TextBox Watermark="(41) 99999-9999" Text="{Binding CustomerForm.Phone}" />
+                  <TextBox Watermark="(41) 99999-9999" Text="{Binding CustomersModule.Form.Phone}" />
                 </StackPanel>
 
-                <Button Grid.Row="4" Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CanRegisterCustomer}" />
+                <Button Grid.Row="4" Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CustomersModule.CanRegister}" />
 
-                <TextBlock Grid.Row="5" IsVisible="{Binding IsCustomerDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o cliente selecionado." TextWrapping="Wrap" />
+                <TextBlock Grid.Row="5" IsVisible="{Binding CustomersModule.IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o cliente selecionado." TextWrapping="Wrap" />
 
                 <Grid Grid.Row="6" ColumnDefinitions="*,*" ColumnSpacing="8" VerticalAlignment="Top">
-                  <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedCustomer}" />
-                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding DeleteSelectedCustomerButtonLabel}" IsEnabled="{Binding CanDeleteSelectedCustomer}" />
+                  <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CustomersModule.CanUpdateSelected}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding CustomersModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding CustomersModule.CanDeleteSelected}" />
                 </Grid>
               </Grid>
             </Border>
@@ -235,15 +235,15 @@
               <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock FontSize="20" FontWeight="SemiBold" Text="Produtos/Serviços" />
-                  <TextBlock Opacity="0.72" Text="{Binding ProductServicesSummary}" />
+                  <TextBlock Opacity="0.72" Text="{Binding ProductCatalogModule.Summary}" />
                 </StackPanel>
 
-                <TextBlock Grid.Row="1" Opacity="0.72" Text="Fundação Sprint 6: cadastro e listagem do catálogo." />
+                <TextBlock Grid.Row="1" Opacity="0.72" Text="Catálogo completo: cadastro, edição, status ativo/inativo e exclusão protegida." />
 
-                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ProductServices}">
+                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ProductCatalogModule.ProductServices}" SelectedItem="{Binding ProductCatalogModule.SelectedProductService}">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:ProductServiceListItemViewModel">
-                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1" Opacity="{Binding RowOpacity}">
                         <Grid ColumnDefinitions="2*,Auto,Auto" ColumnSpacing="8">
                           <StackPanel Spacing="2">
                             <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
@@ -263,31 +263,40 @@
             </Border>
 
             <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
                 <TextBlock FontSize="20" FontWeight="SemiBold" Text="Cadastro de item" />
 
                 <StackPanel Grid.Row="1" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Nome" />
-                  <TextBox Watermark="Nome do produto/serviço" Text="{Binding ProductServiceForm.Name}" />
+                  <TextBox Watermark="Nome do produto/serviço" Text="{Binding ProductCatalogModule.Form.Name}" />
                 </StackPanel>
 
                 <StackPanel Grid.Row="2" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Categoria" />
-                  <TextBox Watermark="Ex.: Serviços, Software, Equipamentos" Text="{Binding ProductServiceForm.Category}" />
+                  <TextBox Watermark="Ex.: Serviços, Software, Equipamentos" Text="{Binding ProductCatalogModule.Form.Category}" />
                 </StackPanel>
 
                 <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
                   <StackPanel Spacing="4">
                     <TextBlock Opacity="0.72" Text="Preço unitário" />
-                    <TextBox Watermark="2500,00" Text="{Binding ProductServiceForm.UnitPrice}" />
+                    <TextBox Watermark="2500,00" Text="{Binding ProductCatalogModule.Form.UnitPrice}" />
                   </StackPanel>
                   <StackPanel Grid.Column="1" Spacing="4">
                     <TextBlock Opacity="0.72" Text="Tipo" />
-                    <ComboBox ItemsSource="{Binding ProductServiceForm.KindOptions}" SelectedItem="{Binding ProductServiceForm.SelectedKind}" />
+                    <ComboBox ItemsSource="{Binding ProductCatalogModule.Form.KindOptions}" SelectedItem="{Binding ProductCatalogModule.Form.SelectedKind}" />
                   </StackPanel>
                 </Grid>
 
-                <Button Grid.Row="4" Padding="14,10" Click="OnRegisterProductServiceClick" Content="Cadastrar item" IsEnabled="{Binding CanRegisterProductService}" />
+                <CheckBox Grid.Row="4" Content="Ativo para novos lançamentos" IsChecked="{Binding ProductCatalogModule.Form.IsActive}" />
+
+                <Button Grid.Row="5" Padding="14,10" Click="OnRegisterProductServiceClick" Content="Cadastrar item" IsEnabled="{Binding ProductCatalogModule.CanRegister}" />
+
+                <TextBlock Grid.Row="6" IsVisible="{Binding ProductCatalogModule.IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o item selecionado." TextWrapping="Wrap" />
+
+                <Grid Grid.Row="7" ColumnDefinitions="*,*" ColumnSpacing="8" VerticalAlignment="Top">
+                  <Button Padding="14,10" Click="OnUpdateSelectedProductServiceClick" Content="Atualizar selecionado" IsEnabled="{Binding ProductCatalogModule.CanUpdateSelected}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedProductServiceClick" Content="{Binding ProductCatalogModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding ProductCatalogModule.CanDeleteSelected}" />
+                </Grid>
               </Grid>
             </Border>
           </Grid>

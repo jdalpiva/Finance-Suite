@@ -19,4 +19,22 @@ public sealed class ProductServiceTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => productService.UpdatePricing(120.555m));
     }
+
+    [Fact]
+    public void Rename_ShouldTrimAndPersistName_WhenValueIsValid()
+    {
+        var productService = new ProductService("Plano Base", "Serviços", 100m, isService: true);
+
+        productService.Rename("  Plano Premium  ");
+
+        Assert.Equal("Plano Premium", productService.Name);
+    }
+
+    [Fact]
+    public void UpdateCategory_ShouldThrow_WhenCategoryIsEmpty()
+    {
+        var productService = new ProductService("Plano Base", "Serviços", 100m, isService: true);
+
+        Assert.Throws<ArgumentException>(() => productService.UpdateCategory("   "));
+    }
 }
