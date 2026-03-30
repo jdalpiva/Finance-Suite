@@ -51,6 +51,7 @@ public sealed class FinancialEntry : AuditableEntity
         DateOnly occurredOn,
         EntryType entryType,
         Guid? customerId,
+        Guid? productServiceId,
         string? notes)
     {
         Description = Guard.AgainstNullOrWhiteSpace(description, nameof(description), 160);
@@ -58,6 +59,7 @@ public sealed class FinancialEntry : AuditableEntity
         OccurredOn = Guard.AgainstDefaultDate(occurredOn, nameof(occurredOn));
         EntryType = entryType;
         CustomerId = customerId;
+        ProductServiceId = productServiceId;
         Notes = Guard.NormalizeOptional(notes, 400);
         Touch();
     }

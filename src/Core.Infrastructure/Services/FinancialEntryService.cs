@@ -71,6 +71,18 @@ public sealed class FinancialEntryService(IDbContextFactory<AppDbContext> dbCont
             }
         }
 
+        if (command.ProductServiceId.HasValue)
+        {
+            bool productServiceExists = await dbContext.ProductsServices
+                .AsNoTracking()
+                .AnyAsync(productService => productService.Id == command.ProductServiceId.Value, cancellationToken);
+
+            if (!productServiceExists)
+            {
+                throw new InvalidOperationException("Produto/serviço informado não foi encontrado.");
+            }
+        }
+
         FinancialEntry? entry = await dbContext.FinancialEntries
             .FirstOrDefaultAsync(item => item.Id == command.Id, cancellationToken);
 
@@ -85,6 +97,7 @@ public sealed class FinancialEntryService(IDbContextFactory<AppDbContext> dbCont
             occurredOn: command.OccurredOn,
             entryType: command.EntryType,
             customerId: command.CustomerId,
+            productServiceId: command.ProductServiceId,
             notes: command.Notes);
 
         await dbContext.SaveChangesAsync(cancellationToken);

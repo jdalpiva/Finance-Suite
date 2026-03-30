@@ -9,4 +9,5 @@ public sealed record UpdateFinancialEntryCommand(
     DateOnly OccurredOn,
     EntryType EntryType,
     string? Notes,
-    Guid? CustomerId = null);
+    Guid? CustomerId = null,
+    Guid? ProductServiceId = null);

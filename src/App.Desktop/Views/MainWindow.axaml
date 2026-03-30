@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 5: CRUD de clientes completo, vínculo incremental de cliente em lançamentos e navegação por módulos." />
+      <TextBlock Opacity="0.72" Text="Sprint 6: fundação de Produtos/Serviços e vínculo incremental de produto/serviço em lançamentos." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -97,7 +97,7 @@
             </Border>
 
             <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
-              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
                 <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamento" />
 
                 <StackPanel Grid.Row="1" Spacing="4">
@@ -139,18 +139,32 @@
                 </Grid>
 
                 <StackPanel Grid.Row="4" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Produto/serviço (opcional)" />
+                  <ComboBox
+                      ItemsSource="{Binding ProductServices}"
+                      SelectedValue="{Binding EntryForm.SelectedProductServiceId}"
+                      SelectedValueBinding="{Binding Id}">
+                    <ComboBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:ProductServiceListItemViewModel">
+                        <TextBlock Text="{Binding Name}" />
+                      </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                  </ComboBox>
+                </StackPanel>
+
+                <StackPanel Grid.Row="5" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Observações" />
                   <TextBox AcceptsReturn="True" Height="92" Text="{Binding EntryForm.NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
                 </StackPanel>
 
-                <Button Grid.Row="5" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding CanRegisterEntry}" />
+                <Button Grid.Row="6" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding CanRegisterEntry}" />
 
-                <Grid Grid.Row="6" ColumnDefinitions="*,*" ColumnSpacing="8">
+                <Grid Grid.Row="7" ColumnDefinitions="*,*" ColumnSpacing="8">
                   <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedEntry}" />
                   <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding DeleteSelectedEntryButtonLabel}" IsEnabled="{Binding CanDeleteSelectedEntry}" />
                 </Grid>
 
-                <TextBlock Grid.Row="7" IsVisible="{Binding IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
+                <TextBlock Grid.Row="8" IsVisible="{Binding IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
               </Grid>
             </Border>
           </Grid>
@@ -210,6 +224,70 @@
                   <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedCustomer}" />
                   <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding DeleteSelectedCustomerButtonLabel}" IsEnabled="{Binding CanDeleteSelectedCustomer}" />
                 </Grid>
+              </Grid>
+            </Border>
+          </Grid>
+        </TabItem>
+
+        <TabItem Header="Produtos/Serviços">
+          <Grid Margin="4" ColumnDefinitions="1.3*,1*" ColumnSpacing="16">
+            <Border Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <TextBlock FontSize="20" FontWeight="SemiBold" Text="Produtos/Serviços" />
+                  <TextBlock Opacity="0.72" Text="{Binding ProductServicesSummary}" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1" Opacity="0.72" Text="Fundação Sprint 6: cadastro e listagem do catálogo." />
+
+                <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ProductServices}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:ProductServiceListItemViewModel">
+                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="2*,Auto,Auto" ColumnSpacing="8">
+                          <StackPanel Spacing="2">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                            <TextBlock FontSize="12" Opacity="0.8" Text="{Binding Category}" />
+                          </StackPanel>
+                          <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock FontSize="12" Opacity="0.8" Text="{Binding KindDisplay}" />
+                            <TextBlock FontSize="12" Opacity="0.8" Text="{Binding ActiveDisplay}" />
+                          </StackPanel>
+                          <TextBlock Grid.Column="2" VerticalAlignment="Center" Text="{Binding UnitPriceDisplay}" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+            </Border>
+
+            <Border Grid.Column="1" Padding="16" BorderBrush="#30363d" BorderThickness="1" CornerRadius="12">
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="10">
+                <TextBlock FontSize="20" FontWeight="SemiBold" Text="Cadastro de item" />
+
+                <StackPanel Grid.Row="1" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Nome" />
+                  <TextBox Watermark="Nome do produto/serviço" Text="{Binding ProductServiceForm.Name}" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Spacing="4">
+                  <TextBlock Opacity="0.72" Text="Categoria" />
+                  <TextBox Watermark="Ex.: Serviços, Software, Equipamentos" Text="{Binding ProductServiceForm.Category}" />
+                </StackPanel>
+
+                <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
+                  <StackPanel Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Preço unitário" />
+                    <TextBox Watermark="2500,00" Text="{Binding ProductServiceForm.UnitPrice}" />
+                  </StackPanel>
+                  <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock Opacity="0.72" Text="Tipo" />
+                    <ComboBox ItemsSource="{Binding ProductServiceForm.KindOptions}" SelectedItem="{Binding ProductServiceForm.SelectedKind}" />
+                  </StackPanel>
+                </Grid>
+
+                <Button Grid.Row="4" Padding="14,10" Click="OnRegisterProductServiceClick" Content="Cadastrar item" IsEnabled="{Binding CanRegisterProductService}" />
               </Grid>
             </Border>
           </Grid>

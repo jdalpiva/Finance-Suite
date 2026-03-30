@@ -3,6 +3,7 @@ using SMEFinanceSuite.Core.Application.Abstractions;
 using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Application.Dashboard;
 using SMEFinanceSuite.Core.Application.FinancialEntries;
+using SMEFinanceSuite.Core.Application.ProductServices;
 using Xunit;
 
 namespace SMEFinanceSuite.Tests.Integration.ViewModels;
@@ -27,7 +28,8 @@ public sealed class MainWindowViewModelTests
         var viewModel = new MainWindowViewModel(
             financialDashboardService: new FakeDashboardService(),
             financialEntryService: new FakeFinancialEntryService(),
-            customerService: customerService);
+            customerService: customerService,
+            productCatalogService: new FakeProductCatalogService());
 
         await viewModel.InitializeAsync(cancellationToken);
         viewModel.SelectedCustomer = Assert.Single(viewModel.Customers);
@@ -104,6 +106,19 @@ public sealed class MainWindowViewModelTests
         {
             IReadOnlyList<CustomerListItemDto> snapshot = _customers.ToList();
             return Task.FromResult(snapshot);
+        }
+    }
+
+    private sealed class FakeProductCatalogService : IProductCatalogService
+    {
+        public Task<Guid> RegisterAsync(CreateProductServiceCommand command, CancellationToken cancellationToken = default)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<IReadOnlyList<ProductServiceListItemDto>> ListAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult<IReadOnlyList<ProductServiceListItemDto>>([]);
         }
     }
 }

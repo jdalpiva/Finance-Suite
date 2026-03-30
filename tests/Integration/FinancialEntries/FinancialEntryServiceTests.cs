@@ -243,6 +243,113 @@ public sealed class FinancialEntryServiceTests
     }
 
     [Fact]
+    public async Task UpdateAsync_ShouldUpdateProductServiceLink_WhenProductServiceIdChanges()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid entryId;
+        Guid sourceProductServiceId;
+        Guid targetProductServiceId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var sourceProductService = new ProductService("Plano A", "Serviços", 300m, isService: true);
+            var targetProductService = new ProductService("Plano B", "Serviços", 450m, isService: true);
+            setupContext.ProductsServices.AddRange(sourceProductService, targetProductService);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            sourceProductServiceId = sourceProductService.Id;
+            targetProductServiceId = targetProductService.Id;
+
+            var entry = new FinancialEntry(
+                description: "Receita com item",
+                amount: 300m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today),
+                entryType: EntryType.Revenue,
+                productServiceId: sourceProductServiceId);
+
+            setupContext.FinancialEntries.Add(entry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            entryId = entry.Id;
+        }
+
+        var service = new FinancialEntryService(new TestDbContextFactory(options));
+
+        await service.UpdateAsync(
+            new UpdateFinancialEntryCommand(
+                Id: entryId,
+                Description: "Receita com item atualizado",
+                Amount: 450m,
+                OccurredOn: DateOnly.FromDateTime(DateTime.Today),
+                EntryType: EntryType.Revenue,
+                Notes: "Vínculo de item alterado",
+                ProductServiceId: targetProductServiceId),
+            cancellationToken);
+
+        IReadOnlyList<FinancialEntryListItemDto> entries = await service.ListAsync(cancellationToken: cancellationToken);
+        FinancialEntryListItemDto updatedEntry = Assert.Single(entries);
+
+        Assert.Equal(entryId, updatedEntry.Id);
+        Assert.Equal(targetProductServiceId, updatedEntry.ProductServiceId);
+        Assert.NotEqual(sourceProductServiceId, updatedEntry.ProductServiceId);
+    }
+
+    [Fact]
+    public async Task UpdateAsync_ShouldThrow_WhenProductServiceReferenceDoesNotExist()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        Guid entryId;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var entry = new FinancialEntry(
+                description: "Receita sem item",
+                amount: 100m,
+                occurredOn: DateOnly.FromDateTime(DateTime.Today),
+                entryType: EntryType.Revenue);
+
+            setupContext.FinancialEntries.Add(entry);
+            await setupContext.SaveChangesAsync(cancellationToken);
+
+            entryId = entry.Id;
+        }
+
+        var service = new FinancialEntryService(new TestDbContextFactory(options));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.UpdateAsync(
+                new UpdateFinancialEntryCommand(
+                    Id: entryId,
+                    Description: "Receita inválida",
+                    Amount: 100m,
+                    OccurredOn: DateOnly.FromDateTime(DateTime.Today),
+                    EntryType: EntryType.Revenue,
+                    Notes: "Tentativa com item inexistente",
+                    ProductServiceId: Guid.NewGuid()),
+                cancellationToken));
+    }
+
+    [Fact]
     public async Task DeleteAsync_ShouldRemoveEntry_WhenEntryExists()
     {
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;

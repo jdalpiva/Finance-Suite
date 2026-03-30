@@ -16,6 +16,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
     private string _selectedFormEntryType = "Receita";
     private string _newEntryNotes = string.Empty;
     private Guid? _selectedCustomerId;
+    private Guid? _selectedProductServiceId;
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -57,6 +58,12 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         set => SetProperty(ref _selectedCustomerId, value);
     }
 
+    public Guid? SelectedProductServiceId
+    {
+        get => _selectedProductServiceId;
+        set => SetProperty(ref _selectedProductServiceId, value);
+    }
+
     public CreateFinancialEntryCommand BuildCreateCommand()
     {
         (string description, decimal amount, DateOnly occurredOn, EntryType entryType, string? notes) = BuildEntryInput();
@@ -67,6 +74,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             OccurredOn: occurredOn,
             EntryType: entryType,
             CustomerId: SelectedCustomerId,
+            ProductServiceId: SelectedProductServiceId,
             Notes: notes);
     }
 
@@ -81,6 +89,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             OccurredOn: occurredOn,
             EntryType: entryType,
             CustomerId: SelectedCustomerId,
+            ProductServiceId: SelectedProductServiceId,
             Notes: notes);
     }
 
@@ -94,6 +103,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         SelectedFormEntryType = selectedEntry.EntryTypeDisplay;
         NewEntryNotes = selectedEntry.Notes ?? string.Empty;
         SelectedCustomerId = selectedEntry.CustomerId;
+        SelectedProductServiceId = selectedEntry.ProductServiceId;
     }
 
     public void Clear()
@@ -104,6 +114,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         SelectedFormEntryType = FormEntryTypeOptions[0];
         NewEntryNotes = string.Empty;
         SelectedCustomerId = null;
+        SelectedProductServiceId = null;
     }
 
     private (string Description, decimal Amount, DateOnly OccurredOn, EntryType EntryType, string? Notes) BuildEntryInput()

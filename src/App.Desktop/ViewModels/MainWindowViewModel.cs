@@ -7,6 +7,7 @@ using SMEFinanceSuite.Core.Application.Abstractions;
 using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Application.Dashboard;
 using SMEFinanceSuite.Core.Application.FinancialEntries;
+using SMEFinanceSuite.Core.Application.ProductServices;
 using SMEFinanceSuite.Core.Domain.Enums;
 
 namespace SMEFinanceSuite.App.Desktop.ViewModels;
@@ -18,6 +19,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private readonly IFinancialDashboardService _financialDashboardService;
     private readonly IFinancialEntryService _financialEntryService;
     private readonly ICustomerService _customerService;
+    private readonly IProductCatalogService _productCatalogService;
 
     private DashboardSummaryDto _summary = DashboardSummaryDto.Empty;
     private string _statusMessage = "Preparando dashboard e módulos...";
@@ -37,14 +39,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
         IFinancialEntryService financialEntryService,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        IProductCatalogService productCatalogService)
     {
         _financialDashboardService = financialDashboardService;
         _financialEntryService = financialEntryService;
         _customerService = customerService;
+        _productCatalogService = productCatalogService;
 
         FinancialEntries.CollectionChanged += OnFinancialEntriesChanged;
         Customers.CollectionChanged += OnCustomersChanged;
+        ProductServices.CollectionChanged += OnProductServicesChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -53,9 +58,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public CustomerFormViewModel CustomerForm { get; } = new();
 
+    public ProductServiceFormViewModel ProductServiceForm { get; } = new();
+
     public ObservableCollection<FinancialEntryListItemViewModel> FinancialEntries { get; } = [];
 
     public ObservableCollection<CustomerListItemViewModel> Customers { get; } = [];
+
+    public ObservableCollection<ProductServiceListItemViewModel> ProductServices { get; } = [];
 
     public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
 
@@ -70,6 +79,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public string EntriesSummary => $"{FinancialEntries.Count} lançamentos";
 
     public string CustomersSummary => $"{Customers.Count} clientes cadastrados";
+
+    public string ProductServicesSummary => $"{ProductServices.Count} itens cadastrados";
 
     public bool IsBusy
     {
@@ -89,6 +100,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanRegisterCustomer));
             OnPropertyChanged(nameof(CanUpdateSelectedCustomer));
             OnPropertyChanged(nameof(CanDeleteSelectedCustomer));
+            OnPropertyChanged(nameof(CanRegisterProductService));
         }
     }
 
@@ -115,6 +127,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public bool CanUpdateSelectedCustomer => !IsBusy && SelectedCustomer is not null;
 
     public bool CanDeleteSelectedCustomer => !IsBusy && SelectedCustomer is not null;
+
+    public bool CanRegisterProductService => !IsBusy;
 
     public FinancialEntryListItemViewModel? SelectedFinancialEntry
     {
@@ -192,6 +206,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await LoadDashboardAsync(cancellationToken);
             await LoadEntriesAsync(cancellationToken);
             await LoadCustomersAsync(cancellationToken);
+            await LoadProductServicesAsync(cancellationToken);
             StatusMessage = $"Dashboard e módulos carregados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
@@ -475,6 +490,34 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task RegisterProductServiceAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            CreateProductServiceCommand command = ProductServiceForm.BuildCreateCommand();
+            await _productCatalogService.RegisterAsync(command, cancellationToken);
+
+            ProductServiceForm.Clear();
+            await LoadProductServicesAsync(cancellationToken);
+            await LoadDashboardAsync(cancellationToken);
+
+            StatusMessage = $"Produto/serviço cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao cadastrar produto/serviço: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
     private async Task LoadDashboardAsync(CancellationToken cancellationToken)
     {
         _summary = await _financialDashboardService.GetSummaryAsync(cancellationToken: cancellationToken);
@@ -503,6 +546,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 amount: entry.Amount,
                 occurredOn: entry.OccurredOn,
                 customerId: entry.CustomerId,
+                productServiceId: entry.ProductServiceId,
                 occurredOnDisplay: entry.OccurredOn.ToString("dd/MM/yyyy", PortugueseCulture),
                 amountDisplay: entry.Amount.ToString("C", PortugueseCulture),
                 entryTypeDisplay: ToEntryTypeLabel(entry.EntryType),
@@ -548,6 +592,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         if (EntryForm.SelectedCustomerId.HasValue && Customers.All(customer => customer.Id != EntryForm.SelectedCustomerId.Value))
         {
             EntryForm.SelectedCustomerId = null;
+        }
+    }
+
+    private async Task LoadProductServicesAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyList<ProductServiceListItemDto> items = await _productCatalogService.ListAsync(cancellationToken);
+
+        ProductServices.Clear();
+
+        foreach (ProductServiceListItemDto item in items)
+        {
+            ProductServices.Add(new ProductServiceListItemViewModel(
+                id: item.Id,
+                name: item.Name,
+                category: item.Category,
+                unitPrice: item.UnitPrice,
+                isService: item.IsService,
+                isActive: item.IsActive));
+        }
+
+        if (EntryForm.SelectedProductServiceId.HasValue && ProductServices.All(item => item.Id != EntryForm.SelectedProductServiceId.Value))
+        {
+            EntryForm.SelectedProductServiceId = null;
         }
     }
 
@@ -679,6 +746,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     private void OnCustomersChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         OnPropertyChanged(nameof(CustomersSummary));
+    }
+
+    private void OnProductServicesChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(ProductServicesSummary));
     }
 
     private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
