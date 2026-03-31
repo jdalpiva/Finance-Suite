@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 7: extração de módulos de UI e CRUD completo de Produtos/Serviços." />
+      <TextBlock Opacity="0.72" Text="Sprint 8: extração estrutural do módulo de lançamentos para consolidar o MainWindow como orquestrador." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -54,15 +54,15 @@
               <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
                 <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
                   <TextBlock FontSize="20" FontWeight="SemiBold" Text="Lançamentos" />
-                  <TextBlock Opacity="0.72" Text="{Binding EntriesSummary}" />
+                  <TextBlock Opacity="0.72" Text="{Binding FinancialEntriesModule.EntriesSummary}" />
                 </StackPanel>
 
                 <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8">
-                  <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding FilterFrom}" />
-                  <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FilterTo}" />
-                  <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding FilterTypeOptions}" SelectedItem="{Binding SelectedFilterType}" />
-                  <Button Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding CanApplyFilters}" />
-                  <Button Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding CanClearFilters}" />
+                  <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding FinancialEntriesModule.FilterFrom}" />
+                  <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FinancialEntriesModule.FilterTo}" />
+                  <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding FinancialEntriesModule.FilterTypeOptions}" SelectedItem="{Binding FinancialEntriesModule.SelectedFilterType}" />
+                  <Button Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding FinancialEntriesModule.CanApplyFilters}" />
+                  <Button Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding FinancialEntriesModule.CanClearFilters}" />
                 </Grid>
 
                 <Border Grid.Row="2" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10" Padding="0">
@@ -74,7 +74,7 @@
                       <TextBlock Grid.Column="3" FontWeight="SemiBold" Text="Observações" />
                     </Grid>
 
-                    <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding FinancialEntries}" SelectedItem="{Binding SelectedFinancialEntry}">
+                    <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding FinancialEntriesModule.FinancialEntries}" SelectedItem="{Binding FinancialEntriesModule.SelectedFinancialEntry}">
                       <ListBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:FinancialEntryListItemViewModel">
                           <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
@@ -102,32 +102,32 @@
 
                 <StackPanel Grid.Row="1" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Descrição" />
-                  <TextBox Text="{Binding EntryForm.NewEntryDescription}" />
+                  <TextBox Text="{Binding FinancialEntriesModule.Form.NewEntryDescription}" />
                 </StackPanel>
 
                 <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="8">
                   <StackPanel Spacing="4">
                     <TextBlock Opacity="0.72" Text="Valor" />
-                    <TextBox Watermark="1500,50" Text="{Binding EntryForm.NewEntryAmount}" />
+                    <TextBox Watermark="1500,50" Text="{Binding FinancialEntriesModule.Form.NewEntryAmount}" />
                   </StackPanel>
 
                   <StackPanel Grid.Column="1" Spacing="4">
                     <TextBlock Opacity="0.72" Text="Data" />
-                    <TextBox Watermark="yyyy-MM-dd" Text="{Binding EntryForm.NewEntryOccurredOn}" />
+                    <TextBox Watermark="yyyy-MM-dd" Text="{Binding FinancialEntriesModule.Form.NewEntryOccurredOn}" />
                   </StackPanel>
                 </Grid>
 
                 <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="8">
                   <StackPanel Spacing="4">
                     <TextBlock Opacity="0.72" Text="Tipo" />
-                    <ComboBox ItemsSource="{Binding EntryForm.FormEntryTypeOptions}" SelectedItem="{Binding EntryForm.SelectedFormEntryType}" />
+                    <ComboBox ItemsSource="{Binding FinancialEntriesModule.Form.FormEntryTypeOptions}" SelectedItem="{Binding FinancialEntriesModule.Form.SelectedFormEntryType}" />
                   </StackPanel>
 
                   <StackPanel Grid.Column="1" Spacing="4">
                     <TextBlock Opacity="0.72" Text="Cliente (opcional)" />
                     <ComboBox
                         ItemsSource="{Binding CustomersModule.Customers}"
-                        SelectedValue="{Binding EntryForm.SelectedCustomerId}"
+                        SelectedValue="{Binding FinancialEntriesModule.Form.SelectedCustomerId}"
                         SelectedValueBinding="{Binding Id}">
                       <ComboBox.ItemTemplate>
                         <DataTemplate x:DataType="vm:CustomerListItemViewModel">
@@ -142,7 +142,7 @@
                   <TextBlock Opacity="0.72" Text="Produto/serviço (opcional)" />
                   <ComboBox
                       ItemsSource="{Binding ProductCatalogModule.ActiveProductServices}"
-                      SelectedValue="{Binding EntryForm.SelectedProductServiceId}"
+                      SelectedValue="{Binding FinancialEntriesModule.Form.SelectedProductServiceId}"
                       SelectedValueBinding="{Binding Id}">
                     <ComboBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:ProductServiceListItemViewModel">
@@ -154,17 +154,17 @@
 
                 <StackPanel Grid.Row="5" Spacing="4">
                   <TextBlock Opacity="0.72" Text="Observações" />
-                  <TextBox AcceptsReturn="True" Height="92" Text="{Binding EntryForm.NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
+                  <TextBox AcceptsReturn="True" Height="92" Text="{Binding FinancialEntriesModule.Form.NewEntryNotes}" TextWrapping="Wrap" VerticalContentAlignment="Top" />
                 </StackPanel>
 
-                <Button Grid.Row="6" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding CanRegisterEntry}" />
+                <Button Grid.Row="6" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding FinancialEntriesModule.CanRegister}" />
 
                 <Grid Grid.Row="7" ColumnDefinitions="*,*" ColumnSpacing="8">
-                  <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding CanUpdateSelectedEntry}" />
-                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding DeleteSelectedEntryButtonLabel}" IsEnabled="{Binding CanDeleteSelectedEntry}" />
+                  <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding FinancialEntriesModule.CanUpdateSelected}" />
+                  <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding FinancialEntriesModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding FinancialEntriesModule.CanDeleteSelected}" />
                 </Grid>
 
-                <TextBlock Grid.Row="8" IsVisible="{Binding IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
+                <TextBlock Grid.Row="8" IsVisible="{Binding FinancialEntriesModule.IsDeleteConfirmationPending}" Opacity="0.9" Text="Confirmação pendente: clique novamente para excluir o lançamento selecionado." TextWrapping="Wrap" />
               </Grid>
             </Border>
           </Grid>
