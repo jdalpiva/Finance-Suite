@@ -4,6 +4,7 @@ using SMEFinanceSuite.Core.Application.Customers;
 using SMEFinanceSuite.Core.Application.Dashboard;
 using SMEFinanceSuite.Core.Application.FinancialEntries;
 using SMEFinanceSuite.Core.Application.ProductServices;
+using SMEFinanceSuite.Core.Application.Reports;
 using Xunit;
 
 namespace SMEFinanceSuite.Tests.Integration.ViewModels;
@@ -27,6 +28,7 @@ public sealed class MainWindowViewModelTests
 
         var viewModel = new MainWindowViewModel(
             financialDashboardService: new FakeDashboardService(),
+            financialReportsService: new FakeReportsService(),
             financialEntryService: new FakeFinancialEntryService(),
             customerService: customerService,
             productCatalogService: new FakeProductCatalogService());
@@ -76,6 +78,14 @@ public sealed class MainWindowViewModelTests
         public Task<IReadOnlyList<FinancialEntryListItemDto>> ListAsync(FinancialEntriesFilter? filter = null, CancellationToken cancellationToken = default)
         {
             return Task.FromResult<IReadOnlyList<FinancialEntryListItemDto>>([]);
+        }
+    }
+
+    private sealed class FakeReportsService : IFinancialReportsService
+    {
+        public Task<FinancialReportSummaryDto> GetSummaryAsync(FinancialReportFilter? filter = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(FinancialReportSummaryDto.Empty);
         }
     }
 

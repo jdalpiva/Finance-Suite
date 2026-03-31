@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 8: extração estrutural do módulo de lançamentos para consolidar o MainWindow como orquestrador." />
+      <TextBlock Opacity="0.72" Text="Sprint 9: módulo de relatórios com visão de período e breakdown por cliente e produto/serviço." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -299,6 +299,92 @@
                 </Grid>
               </Grid>
             </Border>
+          </Grid>
+        </TabItem>
+
+        <TabItem Header="Relatórios">
+          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+              <TextBlock FontSize="20" FontWeight="SemiBold" Text="Relatórios financeiros" />
+              <TextBlock Opacity="0.72" Text="{Binding ReportsModule.Summary}" />
+            </StackPanel>
+
+            <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto" ColumnSpacing="8">
+              <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterFrom}" />
+              <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterTo}" />
+              <Button Grid.Column="2" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
+              <Button Grid.Column="3" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
+            </Grid>
+
+            <Grid Grid.Row="2" RowDefinitions="Auto,Auto" RowSpacing="10">
+              <TextBlock Opacity="0.72" Text="{Binding ReportsModule.PeriodDisplay}" />
+
+              <Grid Grid.Row="1" ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                <Border Padding="14" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock FontSize="13" Opacity="0.72" Text="Receitas no período" />
+                    <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding ReportsModule.TotalRevenueDisplay}" />
+                  </StackPanel>
+                </Border>
+
+                <Border Grid.Column="1" Padding="14" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock FontSize="13" Opacity="0.72" Text="Despesas no período" />
+                    <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding ReportsModule.TotalExpenseDisplay}" />
+                  </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Padding="14" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+                  <StackPanel Spacing="4">
+                    <TextBlock FontSize="13" Opacity="0.72" Text="Saldo no período" />
+                    <TextBlock FontSize="22" FontWeight="Bold" Text="{Binding ReportsModule.NetBalanceDisplay}" />
+                  </StackPanel>
+                </Border>
+              </Grid>
+            </Grid>
+
+            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="16">
+              <Border Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Breakdown por cliente" />
+                  <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByCustomer}">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:FinancialReportBreakdownItemViewModel">
+                        <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                          <Grid ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
+                            <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
+                            <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </Grid>
+              </Border>
+
+              <Border Grid.Column="1" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+                <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                  <TextBlock FontWeight="SemiBold" Text="Breakdown por produto/serviço" />
+                  <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByProductService}">
+                    <ListBox.ItemTemplate>
+                      <DataTemplate x:DataType="vm:FinancialReportBreakdownItemViewModel">
+                        <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8">
+                            <TextBlock FontWeight="SemiBold" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
+                            <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
+                            <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="4" FontSize="12" Opacity="0.72" Text="{Binding CategoryDisplay}" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </Grid>
+              </Border>
+            </Grid>
           </Grid>
         </TabItem>
       </TabControl>

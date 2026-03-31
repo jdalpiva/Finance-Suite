@@ -18,18 +18,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
+        IFinancialReportsService financialReportsService,
         IFinancialEntryService financialEntryService,
         ICustomerService customerService,
         IProductCatalogService productCatalogService)
     {
         _financialDashboardService = financialDashboardService;
 
+        ReportsModule = new ReportsModuleViewModel(financialReportsService);
         FinancialEntriesModule = new FinancialEntriesModuleViewModel(financialEntryService);
         CustomersModule = new CustomersModuleViewModel(customerService);
         ProductCatalogModule = new ProductCatalogModuleViewModel(productCatalogService);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ReportsModuleViewModel ReportsModule { get; }
 
     public FinancialEntriesModuleViewModel FinancialEntriesModule { get; }
 
@@ -55,6 +59,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
                 return;
             }
 
+            ReportsModule.SetBusy(value);
             FinancialEntriesModule.SetBusy(value);
             CustomersModule.SetBusy(value);
             ProductCatalogModule.SetBusy(value);
@@ -72,6 +77,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         try
         {
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
             await FinancialEntriesModule.LoadAsync(cancellationToken);
             await CustomersModule.LoadAsync(cancellationToken);
             await ProductCatalogModule.LoadAsync(cancellationToken);
@@ -107,6 +113,28 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task ApplyReportFiltersAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            await ReportsModule.ApplyFiltersAsync(cancellationToken);
+            StatusMessage = $"Relatório atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao atualizar relatório: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
     public async Task ClearFiltersAsync(CancellationToken cancellationToken = default)
     {
         if (!TryBeginBusyOperation())
@@ -129,6 +157,28 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task ClearReportFiltersAsync(CancellationToken cancellationToken = default)
+    {
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            await ReportsModule.ClearFiltersAsync(cancellationToken);
+            StatusMessage = $"Filtros de relatório limpos em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao limpar filtros de relatório: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
     public async Task RegisterEntryAsync(CancellationToken cancellationToken = default)
     {
         if (!TryBeginBusyOperation())
@@ -140,6 +190,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             await FinancialEntriesModule.RegisterAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Lançamento cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -164,6 +215,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             await FinancialEntriesModule.UpdateSelectedAsync(cancellationToken);
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Lançamento atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -207,6 +259,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             await FinancialEntriesModule.DeleteConfirmedAsync(request.TargetEntryId, cancellationToken);
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Lançamento excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -232,6 +285,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await CustomersModule.RegisterAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Cliente cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -257,6 +311,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await CustomersModule.UpdateSelectedAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Cliente atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -301,6 +356,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await CustomersModule.DeleteConfirmedAsync(request.TargetCustomerId, cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Cliente excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -326,6 +382,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await ProductCatalogModule.RegisterAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Produto/serviço cadastrado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -351,6 +408,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await ProductCatalogModule.UpdateSelectedAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Produto/serviço atualizado em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
@@ -395,6 +453,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await ProductCatalogModule.DeleteConfirmedAsync(request.TargetProductServiceId, cancellationToken);
             SyncFinancialEntriesFormReferences();
             await LoadDashboardAsync(cancellationToken);
+            await ReportsModule.LoadAsync(cancellationToken);
 
             StatusMessage = $"Produto/serviço excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }

@@ -34,6 +34,22 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OnApplyReportFiltersClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.ApplyReportFiltersAsync();
+        }
+    }
+
+    private async void OnClearReportFiltersClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.ClearReportFiltersAsync();
+        }
+    }
+
     private async void OnRegisterEntryClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel viewModel)

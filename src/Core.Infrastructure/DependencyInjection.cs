@@ -19,6 +19,7 @@ public static class DependencyInjection
         // Em Avalonia desktop, a aplicacao usa um unico scope de UI durante o ciclo da janela principal.
         // Na pratica, serviços Scoped resolvidos nesse scope se comportam como singletons de sessao.
         services.AddScoped<IFinancialDashboardService, DashboardSummaryService>();
+        services.AddScoped<IFinancialReportsService, FinancialReportsService>();
         services.AddScoped<IFinancialEntryService, FinancialEntryService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();
