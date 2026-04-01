@@ -99,7 +99,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
 
             if (comparison is null)
             {
-                return "Comparativo disponível ao definir data inicial e final do período.";
+                return "Comparativo indisponível. Defina data inicial e final para calcular o período anterior equivalente.";
             }
 
             string currentFrom = comparison.CurrentFrom.ToString("dd/MM/yyyy", PortugueseCulture);
@@ -107,7 +107,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
             string previousFrom = comparison.PreviousFrom.ToString("dd/MM/yyyy", PortugueseCulture);
             string previousTo = comparison.PreviousTo.ToString("dd/MM/yyyy", PortugueseCulture);
 
-            return $"Atual: {currentFrom} até {currentTo} • Anterior: {previousFrom} até {previousTo}";
+            return $"Período atual (selecionado): {currentFrom} até {currentTo} • Período anterior equivalente: {previousFrom} até {previousTo}";
         }
     }
 
@@ -266,7 +266,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
             ? "n/d"
             : variationPercent.Value.ToString("+0.00%;-0.00%;0.00%", PortugueseCulture);
 
-        return $"{label}: atual {currentDisplay} | anterior {previousDisplay} | variação {variationDisplay} ({variationPercentDisplay})";
+        return $"{label}: atual {currentDisplay} | anterior {previousDisplay} | variação absoluta {variationDisplay} | variação percentual {variationPercentDisplay}";
     }
 
     private string FormatSignedCurrency(decimal value)

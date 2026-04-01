@@ -269,4 +269,104 @@ public sealed class FinancialReportsServiceTests
         Assert.Equal(0m, comparison.PreviousTotalExpense);
         Assert.Equal(300m, comparison.PreviousNetBalance);
     }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldOrderBreakdownsPredictably()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var customerA = new Customer("Cliente A");
+            var customerB = new Customer("Cliente B");
+            var productA = new ProductService("Serviço A", "Serviços", 100m, isService: true);
+            var productB = new ProductService("Serviço B", "Serviços", 100m, isService: true);
+
+            setupContext.Customers.AddRange(customerA, customerB);
+            setupContext.ProductsServices.AddRange(productA, productB);
+            setupContext.FinancialEntries.AddRange(
+                new FinancialEntry("B receita", 700m, new DateOnly(2026, 4, 10), EntryType.Revenue, customerB.Id, productB.Id),
+                new FinancialEntry("A receita", 1000m, new DateOnly(2026, 3, 15), EntryType.Revenue, customerA.Id, productA.Id),
+                new FinancialEntry("A despesa", 900m, new DateOnly(2026, 3, 20), EntryType.Expense, customerA.Id, productA.Id),
+                new FinancialEntry("B despesa menor", 100m, new DateOnly(2026, 4, 12), EntryType.Expense, customerB.Id, productB.Id));
+
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new FinancialReportsService(new TestDbContextFactory(options));
+
+        FinancialReportSummaryDto summary = await service.GetSummaryAsync(cancellationToken: cancellationToken);
+
+        Assert.Collection(
+            summary.BreakdownByMonth,
+            first =>
+            {
+                Assert.Equal(2026, first.Year);
+                Assert.Equal(3, first.Month);
+            },
+            second =>
+            {
+                Assert.Equal(2026, second.Year);
+                Assert.Equal(4, second.Month);
+            });
+
+        Assert.Equal("Cliente A", summary.BreakdownByCustomer[0].Label);
+        Assert.Equal("Cliente B", summary.BreakdownByCustomer[1].Label);
+
+        Assert.Equal("Serviço A", summary.BreakdownByProductService[0].Label);
+        Assert.Equal("Serviço B", summary.BreakdownByProductService[1].Label);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldKeepBreakdownOrderingWithEntryTypeFilter()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var customerA = new Customer("Cliente A");
+            var customerB = new Customer("Cliente B");
+            var productA = new ProductService("Serviço A", "Serviços", 100m, isService: true);
+            var productB = new ProductService("Serviço B", "Serviços", 100m, isService: true);
+
+            setupContext.Customers.AddRange(customerA, customerB);
+            setupContext.ProductsServices.AddRange(productA, productB);
+            setupContext.FinancialEntries.AddRange(
+                new FinancialEntry("A receita", 900m, new DateOnly(2026, 3, 15), EntryType.Revenue, customerA.Id, productA.Id),
+                new FinancialEntry("A despesa", 800m, new DateOnly(2026, 3, 20), EntryType.Expense, customerA.Id, productA.Id),
+                new FinancialEntry("B receita", 700m, new DateOnly(2026, 4, 10), EntryType.Revenue, customerB.Id, productB.Id),
+                new FinancialEntry("B despesa", 100m, new DateOnly(2026, 4, 12), EntryType.Expense, customerB.Id, productB.Id));
+
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new FinancialReportsService(new TestDbContextFactory(options));
+
+        FinancialReportSummaryDto summary = await service.GetSummaryAsync(
+            new FinancialReportFilter(EntryType: EntryType.Expense),
+            cancellationToken);
+
+        Assert.Equal("Cliente A", summary.BreakdownByCustomer[0].Label);
+        Assert.Equal("Cliente B", summary.BreakdownByCustomer[1].Label);
+        Assert.Equal("Serviço A", summary.BreakdownByProductService[0].Label);
+        Assert.Equal("Serviço B", summary.BreakdownByProductService[1].Label);
+    }
 }

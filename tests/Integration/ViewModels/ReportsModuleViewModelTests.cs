@@ -88,11 +88,28 @@ public sealed class ReportsModuleViewModelTests
         await viewModel.LoadAsync(cancellationToken);
 
         Assert.True(viewModel.HasPeriodComparison);
-        Assert.Contains("Atual: 10/03/2026 até 14/03/2026", viewModel.PeriodComparisonDisplay);
-        Assert.Contains("Anterior: 05/03/2026 até 09/03/2026", viewModel.PeriodComparisonDisplay);
-        Assert.Contains("Receita: atual", viewModel.RevenueComparisonDisplay);
-        Assert.Contains("Despesa: atual", viewModel.ExpenseComparisonDisplay);
-        Assert.Contains("Saldo: atual", viewModel.NetBalanceComparisonDisplay);
+        Assert.Contains("Período atual (selecionado): 10/03/2026 até 14/03/2026", viewModel.PeriodComparisonDisplay);
+        Assert.Contains("Período anterior equivalente: 05/03/2026 até 09/03/2026", viewModel.PeriodComparisonDisplay);
+        Assert.Contains("variação absoluta", viewModel.RevenueComparisonDisplay);
+        Assert.Contains("variação percentual", viewModel.RevenueComparisonDisplay);
+        Assert.Contains("variação absoluta", viewModel.ExpenseComparisonDisplay);
+        Assert.Contains("variação percentual", viewModel.ExpenseComparisonDisplay);
+        Assert.Contains("variação absoluta", viewModel.NetBalanceComparisonDisplay);
+        Assert.Contains("variação percentual", viewModel.NetBalanceComparisonDisplay);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldExposeComparisonAsUnavailable_WhenPeriodComparisonIsMissing()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        var service = new FakeReportsService();
+        var viewModel = new ReportsModuleViewModel(service, new FakeReportCsvExporter());
+
+        await viewModel.LoadAsync(cancellationToken);
+
+        Assert.False(viewModel.HasPeriodComparison);
+        Assert.Contains("Comparativo indisponível", viewModel.PeriodComparisonDisplay);
     }
 
     private sealed class FakeReportsService : IFinancialReportsService

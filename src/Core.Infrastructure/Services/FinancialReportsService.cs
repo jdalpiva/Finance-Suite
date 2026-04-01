@@ -71,8 +71,6 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             })
             .ToListAsync(cancellationToken))
             .Select(group => new BreakdownRow(group.ReferenceId, group.TotalRevenue, group.TotalExpense))
-            .OrderByDescending(group => group.TotalRevenue - group.TotalExpense)
-            .ThenByDescending(group => group.TotalRevenue)
             .ToList();
 
         List<Guid> customerIds = customerRows
@@ -100,8 +98,6 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             })
             .ToListAsync(cancellationToken))
             .Select(group => new BreakdownRow(group.ReferenceId, group.TotalRevenue, group.TotalExpense))
-            .OrderByDescending(group => group.TotalRevenue - group.TotalExpense)
-            .ThenByDescending(group => group.TotalRevenue)
             .ToList();
 
         List<Guid> productServiceIds = productRows
@@ -126,6 +122,9 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
                 TotalRevenue: row.TotalRevenue,
                 TotalExpense: row.TotalExpense,
                 NetBalance: row.TotalRevenue - row.TotalExpense))
+            .OrderByDescending(item => item.TotalRevenue + item.TotalExpense)
+            .ThenByDescending(item => item.TotalRevenue)
+            .ThenBy(item => item.Label)
             .ToList();
 
         IReadOnlyList<FinancialReportBreakdownItemDto> productBreakdown = productRows
@@ -141,6 +140,9 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
                     TotalExpense: row.TotalExpense,
                     NetBalance: row.TotalRevenue - row.TotalExpense);
             })
+            .OrderByDescending(item => item.TotalRevenue + item.TotalExpense)
+            .ThenByDescending(item => item.TotalRevenue)
+            .ThenBy(item => item.Label)
             .ToList();
 
         FinancialReportPeriodComparisonDto? periodComparison = await BuildPeriodComparisonAsync(dbContext, filter, cancellationToken);

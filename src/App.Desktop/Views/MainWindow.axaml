@@ -350,6 +350,7 @@
             <Border Grid.Row="3" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
               <StackPanel Spacing="8">
                 <TextBlock FontWeight="SemiBold" Text="Comparativo com período anterior" />
+                <TextBlock FontSize="12" Opacity="0.72" Text="Regra: período anterior imediato com a mesma duração do período selecionado." TextWrapping="Wrap" />
                 <TextBlock Opacity="0.72" Text="{Binding ReportsModule.PeriodComparisonDisplay}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding ReportsModule.RevenueComparisonDisplay}" TextWrapping="Wrap" />
                 <TextBlock Text="{Binding ReportsModule.ExpenseComparisonDisplay}" TextWrapping="Wrap" />
