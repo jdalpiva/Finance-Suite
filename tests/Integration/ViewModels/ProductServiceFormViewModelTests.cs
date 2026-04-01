@@ -23,6 +23,40 @@ public sealed class ProductServiceFormViewModelTests
     }
 
     [Fact]
+    public void BuildCreateCommand_ShouldParseUnitPriceWithDotDecimalSeparator()
+    {
+        var viewModel = new ProductServiceFormViewModel
+        {
+            Name = "Plano Dot",
+            Category = "Serviços",
+            UnitPrice = "2500.40",
+            SelectedKind = "Serviço",
+            IsActive = true
+        };
+
+        var command = viewModel.BuildCreateCommand();
+
+        Assert.Equal(2500.40m, command.UnitPrice);
+    }
+
+    [Fact]
+    public void BuildCreateCommand_ShouldParseUnitPriceWithGroupedThousandsInPtBrFormat()
+    {
+        var viewModel = new ProductServiceFormViewModel
+        {
+            Name = "Plano Milhar",
+            Category = "Serviços",
+            UnitPrice = "1.500",
+            SelectedKind = "Serviço",
+            IsActive = true
+        };
+
+        var command = viewModel.BuildCreateCommand();
+
+        Assert.Equal(1500m, command.UnitPrice);
+    }
+
+    [Fact]
     public void BuildCreateCommand_ShouldThrowWhenUnitPriceIsInvalid()
     {
         var viewModel = new ProductServiceFormViewModel

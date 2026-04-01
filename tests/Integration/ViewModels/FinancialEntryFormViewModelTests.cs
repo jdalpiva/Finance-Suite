@@ -36,14 +36,46 @@ public sealed class FinancialEntryFormViewModelTests
         var viewModel = new FinancialEntryFormViewModel
         {
             NewEntryDescription = "Receita válida",
-            NewEntryAmount = "1500,75",
+            NewEntryAmount = "1500,50",
             NewEntryOccurredOn = "2026-04-01",
             SelectedFormEntryType = "Receita"
         };
 
         var command = viewModel.BuildCreateCommand();
 
-        Assert.Equal(1500.75m, command.Amount);
+        Assert.Equal(1500.50m, command.Amount);
+    }
+
+    [Fact]
+    public void BuildCreateCommand_ShouldParseAmountWithDotDecimalSeparator()
+    {
+        var viewModel = new FinancialEntryFormViewModel
+        {
+            NewEntryDescription = "Receita fallback invariant",
+            NewEntryAmount = "1500.50",
+            NewEntryOccurredOn = "2026-04-01",
+            SelectedFormEntryType = "Receita"
+        };
+
+        var command = viewModel.BuildCreateCommand();
+
+        Assert.Equal(1500.50m, command.Amount);
+    }
+
+    [Fact]
+    public void BuildCreateCommand_ShouldParseAmountWithGroupedThousandsInPtBrFormat()
+    {
+        var viewModel = new FinancialEntryFormViewModel
+        {
+            NewEntryDescription = "Receita com milhar",
+            NewEntryAmount = "1.500,50",
+            NewEntryOccurredOn = "2026-04-01",
+            SelectedFormEntryType = "Receita"
+        };
+
+        var command = viewModel.BuildCreateCommand();
+
+        Assert.Equal(1500.50m, command.Amount);
     }
 
     [Fact]
