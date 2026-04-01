@@ -250,7 +250,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     {
         if (previousAmount is null)
         {
-            return $"{label}: comparativo indisponível";
+            return $"■ Sem comparativo | {label}: comparativo indisponível";
         }
 
         decimal previous = previousAmount.Value;
@@ -259,6 +259,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
             ? null
             : variation / Math.Abs(previous);
 
+        string trendDisplay = GetTrendDisplay(variation);
         string currentDisplay = currentAmount.ToString("C", PortugueseCulture);
         string previousDisplay = previous.ToString("C", PortugueseCulture);
         string variationDisplay = FormatSignedCurrency(variation);
@@ -266,7 +267,22 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
             ? "n/d"
             : variationPercent.Value.ToString("+0.00%;-0.00%;0.00%", PortugueseCulture);
 
-        return $"{label}: atual {currentDisplay} | anterior {previousDisplay} | variação absoluta {variationDisplay} | variação percentual {variationPercentDisplay}";
+        return $"{trendDisplay} | {label}: atual {currentDisplay} | anterior {previousDisplay} | variação absoluta {variationDisplay} | variação percentual {variationPercentDisplay}";
+    }
+
+    private static string GetTrendDisplay(decimal variation)
+    {
+        if (variation > 0m)
+        {
+            return "▲ Alta";
+        }
+
+        if (variation < 0m)
+        {
+            return "▼ Queda";
+        }
+
+        return "■ Estável";
     }
 
     private string FormatSignedCurrency(decimal value)

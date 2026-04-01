@@ -90,6 +90,9 @@ public sealed class ReportsModuleViewModelTests
         Assert.True(viewModel.HasPeriodComparison);
         Assert.Contains("Período atual (selecionado): 10/03/2026 até 14/03/2026", viewModel.PeriodComparisonDisplay);
         Assert.Contains("Período anterior equivalente: 05/03/2026 até 09/03/2026", viewModel.PeriodComparisonDisplay);
+        Assert.StartsWith("▲ Alta | Receita:", viewModel.RevenueComparisonDisplay);
+        Assert.StartsWith("▲ Alta | Despesa:", viewModel.ExpenseComparisonDisplay);
+        Assert.StartsWith("▲ Alta | Saldo:", viewModel.NetBalanceComparisonDisplay);
         Assert.Contains("variação absoluta", viewModel.RevenueComparisonDisplay);
         Assert.Contains("variação percentual", viewModel.RevenueComparisonDisplay);
         Assert.Contains("variação absoluta", viewModel.ExpenseComparisonDisplay);
@@ -110,6 +113,42 @@ public sealed class ReportsModuleViewModelTests
 
         Assert.False(viewModel.HasPeriodComparison);
         Assert.Contains("Comparativo indisponível", viewModel.PeriodComparisonDisplay);
+        Assert.StartsWith("■ Sem comparativo | Receita:", viewModel.RevenueComparisonDisplay);
+        Assert.StartsWith("■ Sem comparativo | Despesa:", viewModel.ExpenseComparisonDisplay);
+        Assert.StartsWith("■ Sem comparativo | Saldo:", viewModel.NetBalanceComparisonDisplay);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ShouldExposeDownAndStableIndicators_WhenValuesDecreaseOrStayEqual()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        FinancialReportSummaryDto summary = new(
+            From: new DateOnly(2026, 4, 1),
+            To: new DateOnly(2026, 4, 30),
+            TotalRevenue: 1200m,
+            TotalExpense: 350m,
+            NetBalance: 850m,
+            BreakdownByMonth: [],
+            BreakdownByCustomer: [],
+            BreakdownByProductService: [],
+            PeriodComparison: new FinancialReportPeriodComparisonDto(
+                CurrentFrom: new DateOnly(2026, 4, 1),
+                CurrentTo: new DateOnly(2026, 4, 30),
+                PreviousFrom: new DateOnly(2026, 3, 2),
+                PreviousTo: new DateOnly(2026, 3, 31),
+                PreviousTotalRevenue: 1500m,
+                PreviousTotalExpense: 350m,
+                PreviousNetBalance: 850m));
+
+        var service = new FixedSummaryReportsService(summary);
+        var viewModel = new ReportsModuleViewModel(service, new FakeReportCsvExporter());
+
+        await viewModel.LoadAsync(cancellationToken);
+
+        Assert.StartsWith("▼ Queda | Receita:", viewModel.RevenueComparisonDisplay);
+        Assert.StartsWith("■ Estável | Despesa:", viewModel.ExpenseComparisonDisplay);
+        Assert.StartsWith("■ Estável | Saldo:", viewModel.NetBalanceComparisonDisplay);
     }
 
     private sealed class FakeReportsService : IFinancialReportsService
@@ -189,6 +228,14 @@ public sealed class ReportsModuleViewModelTests
         {
             LastSummary = summary;
             return "csv-gerado";
+        }
+    }
+
+    private sealed class FixedSummaryReportsService(FinancialReportSummaryDto summary) : IFinancialReportsService
+    {
+        public Task<FinancialReportSummaryDto> GetSummaryAsync(FinancialReportFilter? filter = null, CancellationToken cancellationToken = default)
+        {
+            return Task.FromResult(summary);
         }
     }
 }
