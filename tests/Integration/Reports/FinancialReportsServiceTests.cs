@@ -120,4 +120,63 @@ public sealed class FinancialReportsServiceTests
         Assert.Equal(900m, march.TotalRevenue);
         Assert.Equal(250m, march.TotalExpense);
     }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldApplyEntryTypeFilterToTotalsAndBreakdowns()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            var customer = new Customer("Cliente Tipo");
+            var productService = new ProductService("Plano Tipo", "Assinatura", 300m, isService: true);
+
+            setupContext.Customers.Add(customer);
+            setupContext.ProductsServices.Add(productService);
+            setupContext.FinancialEntries.AddRange(
+                new FinancialEntry("Receita março", 700m, new DateOnly(2026, 3, 5), EntryType.Revenue, customer.Id, productService.Id),
+                new FinancialEntry("Despesa março", 250m, new DateOnly(2026, 3, 8), EntryType.Expense, customer.Id, productService.Id),
+                new FinancialEntry("Receita abril", 300m, new DateOnly(2026, 4, 2), EntryType.Revenue));
+
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new FinancialReportsService(new TestDbContextFactory(options));
+
+        FinancialReportSummaryDto summary = await service.GetSummaryAsync(
+            new FinancialReportFilter(EntryType: EntryType.Expense),
+            cancellationToken);
+
+        Assert.Equal(0m, summary.TotalRevenue);
+        Assert.Equal(250m, summary.TotalExpense);
+        Assert.Equal(-250m, summary.NetBalance);
+
+        FinancialReportMonthlyBreakdownItemDto march = Assert.Single(summary.BreakdownByMonth);
+        Assert.Equal(2026, march.Year);
+        Assert.Equal(3, march.Month);
+        Assert.Equal(0m, march.TotalRevenue);
+        Assert.Equal(250m, march.TotalExpense);
+        Assert.Equal(-250m, march.NetBalance);
+
+        FinancialReportBreakdownItemDto customerItem = Assert.Single(summary.BreakdownByCustomer);
+        Assert.Equal("Cliente Tipo", customerItem.Label);
+        Assert.Equal(0m, customerItem.TotalRevenue);
+        Assert.Equal(250m, customerItem.TotalExpense);
+        Assert.Equal(-250m, customerItem.NetBalance);
+
+        FinancialReportBreakdownItemDto productItem = Assert.Single(summary.BreakdownByProductService);
+        Assert.Equal("Plano Tipo", productItem.Label);
+        Assert.Equal(0m, productItem.TotalRevenue);
+        Assert.Equal(250m, productItem.TotalExpense);
+        Assert.Equal(-250m, productItem.NetBalance);
+    }
 }

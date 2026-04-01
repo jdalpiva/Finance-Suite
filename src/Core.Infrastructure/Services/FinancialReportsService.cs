@@ -33,6 +33,11 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             query = query.Where(entry => entry.OccurredOn <= filter.To.Value);
         }
 
+        if (filter.EntryType is not null)
+        {
+            query = query.Where(entry => entry.EntryType == filter.EntryType.Value);
+        }
+
         decimal totalRevenue = await query
             .Where(entry => entry.EntryType == EntryType.Revenue)
             .SumAsync(entry => (decimal?)entry.Amount, cancellationToken) ?? 0m;

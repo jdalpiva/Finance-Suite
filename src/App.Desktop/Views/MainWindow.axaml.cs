@@ -85,7 +85,7 @@ public partial class MainWindow : Window
             }
 
             await using Stream stream = await file.OpenWriteAsync();
-            await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+            await using var writer = new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
             await writer.WriteAsync(export.Content);
 
             viewModel.NotifyReportExportSucceeded(file.Name);

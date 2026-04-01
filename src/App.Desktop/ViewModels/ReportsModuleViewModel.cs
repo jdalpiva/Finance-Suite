@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Runtime.CompilerServices;
 using SMEFinanceSuite.Core.Application.Abstractions;
 using SMEFinanceSuite.Core.Application.Reports;
+using SMEFinanceSuite.Core.Domain.Enums;
 
 namespace SMEFinanceSuite.App.Desktop.ViewModels;
 
@@ -18,6 +19,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     private FinancialReportSummaryDto _summary = FinancialReportSummaryDto.Empty;
     private string _filterFrom = string.Empty;
     private string _filterTo = string.Empty;
+    private string _selectedFilterType = "Todos";
     private bool _isBusy;
 
     public ReportsModuleViewModel(
@@ -49,6 +51,14 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     {
         get => _filterTo;
         set => SetProperty(ref _filterTo, value);
+    }
+
+    public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
+
+    public string SelectedFilterType
+    {
+        get => _selectedFilterType;
+        set => SetProperty(ref _selectedFilterType, value);
     }
 
     public bool IsBusy
@@ -119,6 +129,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     {
         FilterFrom = string.Empty;
         FilterTo = string.Empty;
+        SelectedFilterType = FilterTypeOptions[0];
         await LoadAsync(cancellationToken);
     }
 
@@ -176,8 +187,14 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     {
         DateOnly? from = DateOnlyInputParser.ParseOptional(FilterFrom, "Data inicial");
         DateOnly? to = DateOnlyInputParser.ParseOptional(FilterTo, "Data final");
+        EntryType? entryType = SelectedFilterType switch
+        {
+            "Receita" => EntryType.Revenue,
+            "Despesa" => EntryType.Expense,
+            _ => null
+        };
 
-        return new FinancialReportFilter(From: from, To: to);
+        return new FinancialReportFilter(From: from, To: to, EntryType: entryType);
     }
 
     private string BuildSuggestedExportFileName()
