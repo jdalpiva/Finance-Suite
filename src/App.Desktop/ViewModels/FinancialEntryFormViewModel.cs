@@ -126,7 +126,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             throw new InvalidOperationException("Informe a descrição do lançamento.");
         }
 
-        if (!TryParseAmount(NewEntryAmount, out decimal amount))
+        if (!DecimalInputParser.TryParse(NewEntryAmount, out decimal amount))
         {
             throw new InvalidOperationException("Informe um valor válido. Exemplo: 1500,50");
         }
@@ -143,17 +143,6 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
 
         return (description, amount, occurredOn, entryType, notes);
     }
-
-    private static bool TryParseAmount(string rawAmount, out decimal amount)
-    {
-        if (decimal.TryParse(rawAmount, NumberStyles.Number, PortugueseCulture, out amount))
-        {
-            return true;
-        }
-
-        return decimal.TryParse(rawAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out amount);
-    }
-
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(storage, value))

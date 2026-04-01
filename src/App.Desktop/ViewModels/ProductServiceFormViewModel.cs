@@ -99,7 +99,7 @@ public sealed class ProductServiceFormViewModel : INotifyPropertyChanged
         string name = Name.Trim();
         string category = Category.Trim();
 
-        if (!TryParseAmount(UnitPrice, out decimal unitPrice))
+        if (!DecimalInputParser.TryParse(UnitPrice, out decimal unitPrice))
         {
             throw new InvalidOperationException("Informe um preço válido. Exemplo: 2500,00");
         }
@@ -108,17 +108,6 @@ public sealed class ProductServiceFormViewModel : INotifyPropertyChanged
 
         return (name, category, unitPrice, isService);
     }
-
-    private static bool TryParseAmount(string rawAmount, out decimal amount)
-    {
-        if (decimal.TryParse(rawAmount, NumberStyles.Number, PortugueseCulture, out amount))
-        {
-            return true;
-        }
-
-        return decimal.TryParse(rawAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out amount);
-    }
-
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)
     {
         if (EqualityComparer<T>.Default.Equals(storage, value))

@@ -29,4 +29,36 @@ public sealed class FinancialEntryFormViewModelTests
         Assert.Equal(selectedCustomerId, command.CustomerId);
         Assert.Equal(selectedProductServiceId, command.ProductServiceId);
     }
+
+    [Fact]
+    public void BuildCreateCommand_ShouldParseAmountWhenInputIsValid()
+    {
+        var viewModel = new FinancialEntryFormViewModel
+        {
+            NewEntryDescription = "Receita válida",
+            NewEntryAmount = "1500,75",
+            NewEntryOccurredOn = "2026-04-01",
+            SelectedFormEntryType = "Receita"
+        };
+
+        var command = viewModel.BuildCreateCommand();
+
+        Assert.Equal(1500.75m, command.Amount);
+    }
+
+    [Fact]
+    public void BuildCreateCommand_ShouldThrowWhenAmountIsInvalid()
+    {
+        var viewModel = new FinancialEntryFormViewModel
+        {
+            NewEntryDescription = "Receita inválida",
+            NewEntryAmount = "abc",
+            NewEntryOccurredOn = "2026-04-01",
+            SelectedFormEntryType = "Receita"
+        };
+
+        InvalidOperationException exception = Assert.Throws<InvalidOperationException>(() => viewModel.BuildCreateCommand());
+
+        Assert.Equal("Informe um valor válido. Exemplo: 1500,50", exception.Message);
+    }
 }
