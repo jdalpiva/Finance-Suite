@@ -309,11 +309,12 @@
               <TextBlock Opacity="0.72" Text="{Binding ReportsModule.Summary}" />
             </StackPanel>
 
-            <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto" ColumnSpacing="8">
+            <Grid Grid.Row="1" ColumnDefinitions="*,*,Auto,Auto,Auto" ColumnSpacing="8">
               <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterFrom}" />
               <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterTo}" />
               <Button Grid.Column="2" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
               <Button Grid.Column="3" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
+              <Button Grid.Column="4" Padding="14,8" Click="OnExportReportCsvClick" Content="Exportar CSV" IsEnabled="{Binding ReportsModule.CanExportCsv}" />
             </Grid>
 
             <Grid Grid.Row="2" RowDefinitions="Auto,Auto" RowSpacing="10">

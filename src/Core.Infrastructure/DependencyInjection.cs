@@ -20,6 +20,7 @@ public static class DependencyInjection
         // Na pratica, serviços Scoped resolvidos nesse scope se comportam como singletons de sessao.
         services.AddScoped<IFinancialDashboardService, DashboardSummaryService>();
         services.AddScoped<IFinancialReportsService, FinancialReportsService>();
+        services.AddScoped<IFinancialReportCsvExporter, FinancialReportCsvExporter>();
         services.AddScoped<IFinancialEntryService, FinancialEntryService>();
         services.AddScoped<ICustomerService, CustomerService>();
         services.AddScoped<IProductCatalogService, ProductCatalogService>();

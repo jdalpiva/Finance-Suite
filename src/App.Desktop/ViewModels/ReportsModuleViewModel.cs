@@ -13,15 +13,19 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     private static readonly CultureInfo PortugueseCulture = CultureInfo.GetCultureInfo("pt-BR");
 
     private readonly IFinancialReportsService _financialReportsService;
+    private readonly IFinancialReportCsvExporter _financialReportCsvExporter;
 
     private FinancialReportSummaryDto _summary = FinancialReportSummaryDto.Empty;
     private string _filterFrom = string.Empty;
     private string _filterTo = string.Empty;
     private bool _isBusy;
 
-    public ReportsModuleViewModel(IFinancialReportsService financialReportsService)
+    public ReportsModuleViewModel(
+        IFinancialReportsService financialReportsService,
+        IFinancialReportCsvExporter financialReportCsvExporter)
     {
         _financialReportsService = financialReportsService;
+        _financialReportCsvExporter = financialReportCsvExporter;
         BreakdownByMonth.CollectionChanged += OnBreakdownCollectionsChanged;
         BreakdownByCustomer.CollectionChanged += OnBreakdownCollectionsChanged;
         BreakdownByProductService.CollectionChanged += OnBreakdownCollectionsChanged;
@@ -59,12 +63,15 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
 
             OnPropertyChanged(nameof(CanApplyFilters));
             OnPropertyChanged(nameof(CanClearFilters));
+            OnPropertyChanged(nameof(CanExportCsv));
         }
     }
 
     public bool CanApplyFilters => !IsBusy;
 
     public bool CanClearFilters => !IsBusy;
+
+    public bool CanExportCsv => !IsBusy;
 
     public string TotalRevenueDisplay => _summary.TotalRevenue.ToString("C", PortugueseCulture);
 
@@ -115,6 +122,15 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         await LoadAsync(cancellationToken);
     }
 
+    public FinancialReportCsvExport CreateCsvExport()
+    {
+        string content = _financialReportCsvExporter.Export(_summary);
+
+        return new FinancialReportCsvExport(
+            SuggestedFileName: BuildSuggestedExportFileName(),
+            Content: content);
+    }
+
     private void PopulateBreakdowns(FinancialReportSummaryDto summary)
     {
         BreakdownByMonth.Clear();
@@ -162,6 +178,13 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         DateOnly? to = DateOnlyInputParser.ParseOptional(FilterTo, "Data final");
 
         return new FinancialReportFilter(From: from, To: to);
+    }
+
+    private string BuildSuggestedExportFileName()
+    {
+        string from = _summary.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "inicio";
+        string to = _summary.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "hoje";
+        return $"relatorio-financeiro-{from}-a-{to}.csv";
     }
 
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

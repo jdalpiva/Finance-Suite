@@ -19,13 +19,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
     public MainWindowViewModel(
         IFinancialDashboardService financialDashboardService,
         IFinancialReportsService financialReportsService,
+        IFinancialReportCsvExporter financialReportCsvExporter,
         IFinancialEntryService financialEntryService,
         ICustomerService customerService,
         IProductCatalogService productCatalogService)
     {
         _financialDashboardService = financialDashboardService;
 
-        ReportsModule = new ReportsModuleViewModel(financialReportsService);
+        ReportsModule = new ReportsModuleViewModel(financialReportsService, financialReportCsvExporter);
         FinancialEntriesModule = new FinancialEntriesModuleViewModel(financialEntryService);
         CustomersModule = new CustomersModuleViewModel(customerService);
         ProductCatalogModule = new ProductCatalogModuleViewModel(productCatalogService);
@@ -177,6 +178,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         {
             EndBusyOperation();
         }
+    }
+
+    public FinancialReportCsvExport CreateReportCsvExport()
+    {
+        return ReportsModule.CreateCsvExport();
+    }
+
+    public void NotifyReportExportSucceeded(string fileName)
+    {
+        StatusMessage = $"Relatório exportado ({fileName}) em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+    }
+
+    public void NotifyReportExportCancelled()
+    {
+        StatusMessage = "Exportação de relatório cancelada.";
+    }
+
+    public void NotifyReportExportFailed(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        StatusMessage = $"Falha ao exportar relatório: {exception.Message}";
     }
 
     public async Task RegisterEntryAsync(CancellationToken cancellationToken = default)

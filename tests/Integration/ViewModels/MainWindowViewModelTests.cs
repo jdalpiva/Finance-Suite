@@ -29,6 +29,7 @@ public sealed class MainWindowViewModelTests
         var viewModel = new MainWindowViewModel(
             financialDashboardService: new FakeDashboardService(),
             financialReportsService: new FakeReportsService(),
+            financialReportCsvExporter: new FakeReportCsvExporter(),
             financialEntryService: new FakeFinancialEntryService(),
             customerService: customerService,
             productCatalogService: new FakeProductCatalogService());
@@ -86,6 +87,14 @@ public sealed class MainWindowViewModelTests
         public Task<FinancialReportSummaryDto> GetSummaryAsync(FinancialReportFilter? filter = null, CancellationToken cancellationToken = default)
         {
             return Task.FromResult(FinancialReportSummaryDto.Empty);
+        }
+    }
+
+    private sealed class FakeReportCsvExporter : IFinancialReportCsvExporter
+    {
+        public string Export(FinancialReportSummaryDto summary)
+        {
+            return "csv";
         }
     }
 

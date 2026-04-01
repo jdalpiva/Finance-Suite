@@ -13,7 +13,7 @@ public sealed class ReportsModuleViewModelTests
         CancellationToken cancellationToken = TestContext.Current.CancellationToken;
 
         var service = new FakeReportsService();
-        var viewModel = new ReportsModuleViewModel(service)
+        var viewModel = new ReportsModuleViewModel(service, new FakeReportCsvExporter())
         {
             FilterFrom = "2026-03-01",
             FilterTo = "2026-03-31"
@@ -29,6 +29,30 @@ public sealed class ReportsModuleViewModelTests
         Assert.Equal("03/2026", monthly.MonthDisplay);
         Assert.Single(viewModel.BreakdownByCustomer);
         Assert.Single(viewModel.BreakdownByProductService);
+    }
+
+    [Fact]
+    public async Task CreateCsvExport_ShouldUseCurrentSummaryAndSuggestedFileName()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        var service = new FakeReportsService();
+        var exporter = new FakeReportCsvExporter();
+        var viewModel = new ReportsModuleViewModel(service, exporter)
+        {
+            FilterFrom = "2026-03-01",
+            FilterTo = "2026-03-31"
+        };
+
+        await viewModel.LoadAsync(cancellationToken);
+
+        FinancialReportCsvExport export = viewModel.CreateCsvExport();
+
+        Assert.Equal("relatorio-financeiro-2026-03-01-a-2026-03-31.csv", export.SuggestedFileName);
+        Assert.Equal("csv-gerado", export.Content);
+        Assert.NotNull(exporter.LastSummary);
+        Assert.Equal(1200m, exporter.LastSummary!.TotalRevenue);
+        Assert.Equal(350m, exporter.LastSummary.TotalExpense);
     }
 
     private sealed class FakeReportsService : IFinancialReportsService
@@ -76,6 +100,17 @@ public sealed class ReportsModuleViewModelTests
                 ]);
 
             return Task.FromResult(summary);
+        }
+    }
+
+    private sealed class FakeReportCsvExporter : IFinancialReportCsvExporter
+    {
+        public FinancialReportSummaryDto? LastSummary { get; private set; }
+
+        public string Export(FinancialReportSummaryDto summary)
+        {
+            LastSummary = summary;
+            return "csv-gerado";
         }
     }
 }
