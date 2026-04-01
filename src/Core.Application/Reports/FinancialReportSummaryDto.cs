@@ -8,7 +8,8 @@ public sealed record FinancialReportSummaryDto(
     decimal NetBalance,
     IReadOnlyList<FinancialReportMonthlyBreakdownItemDto> BreakdownByMonth,
     IReadOnlyList<FinancialReportBreakdownItemDto> BreakdownByCustomer,
-    IReadOnlyList<FinancialReportBreakdownItemDto> BreakdownByProductService)
+    IReadOnlyList<FinancialReportBreakdownItemDto> BreakdownByProductService,
+    FinancialReportPeriodComparisonDto? PeriodComparison = null)
 {
     public static FinancialReportSummaryDto Empty { get; } = new(
         From: null,
@@ -18,5 +19,6 @@ public sealed record FinancialReportSummaryDto(
         NetBalance: 0m,
         BreakdownByMonth: [],
         BreakdownByCustomer: [],
-        BreakdownByProductService: []);
+        BreakdownByProductService: [],
+        PeriodComparison: null);
 }

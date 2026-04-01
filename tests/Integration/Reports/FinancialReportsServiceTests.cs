@@ -179,4 +179,94 @@ public sealed class FinancialReportsServiceTests
         Assert.Equal(250m, productItem.TotalExpense);
         Assert.Equal(-250m, productItem.NetBalance);
     }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldCalculateComparisonUsingPreviousPeriodWithSameDuration()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            setupContext.FinancialEntries.AddRange(
+                new FinancialEntry("Receita anterior", 400m, new DateOnly(2026, 3, 6), EntryType.Revenue),
+                new FinancialEntry("Despesa anterior", 100m, new DateOnly(2026, 3, 7), EntryType.Expense),
+                new FinancialEntry("Receita atual", 700m, new DateOnly(2026, 3, 11), EntryType.Revenue),
+                new FinancialEntry("Despesa atual", 250m, new DateOnly(2026, 3, 13), EntryType.Expense),
+                new FinancialEntry("Fora do comparativo", 999m, new DateOnly(2026, 3, 20), EntryType.Revenue));
+
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new FinancialReportsService(new TestDbContextFactory(options));
+
+        FinancialReportSummaryDto summary = await service.GetSummaryAsync(
+            new FinancialReportFilter(From: new DateOnly(2026, 3, 10), To: new DateOnly(2026, 3, 14)),
+            cancellationToken);
+
+        Assert.Equal(700m, summary.TotalRevenue);
+        Assert.Equal(250m, summary.TotalExpense);
+        Assert.Equal(450m, summary.NetBalance);
+
+        FinancialReportPeriodComparisonDto comparison = Assert.IsType<FinancialReportPeriodComparisonDto>(summary.PeriodComparison);
+        Assert.Equal(new DateOnly(2026, 3, 10), comparison.CurrentFrom);
+        Assert.Equal(new DateOnly(2026, 3, 14), comparison.CurrentTo);
+        Assert.Equal(new DateOnly(2026, 3, 5), comparison.PreviousFrom);
+        Assert.Equal(new DateOnly(2026, 3, 9), comparison.PreviousTo);
+        Assert.Equal(400m, comparison.PreviousTotalRevenue);
+        Assert.Equal(100m, comparison.PreviousTotalExpense);
+        Assert.Equal(300m, comparison.PreviousNetBalance);
+    }
+
+    [Fact]
+    public async Task GetSummaryAsync_ShouldApplyEntryTypeFilterToComparison()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        using var connection = new SqliteConnection("Data Source=:memory:");
+        await connection.OpenAsync(cancellationToken);
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlite(connection)
+            .Options;
+
+        await using (var setupContext = new AppDbContext(options))
+        {
+            await setupContext.Database.MigrateAsync(cancellationToken);
+
+            setupContext.FinancialEntries.AddRange(
+                new FinancialEntry("Receita anterior", 300m, new DateOnly(2026, 3, 6), EntryType.Revenue),
+                new FinancialEntry("Despesa anterior", 90m, new DateOnly(2026, 3, 7), EntryType.Expense),
+                new FinancialEntry("Receita atual", 500m, new DateOnly(2026, 3, 11), EntryType.Revenue),
+                new FinancialEntry("Despesa atual", 150m, new DateOnly(2026, 3, 12), EntryType.Expense));
+
+            await setupContext.SaveChangesAsync(cancellationToken);
+        }
+
+        var service = new FinancialReportsService(new TestDbContextFactory(options));
+
+        FinancialReportSummaryDto summary = await service.GetSummaryAsync(
+            new FinancialReportFilter(
+                From: new DateOnly(2026, 3, 10),
+                To: new DateOnly(2026, 3, 14),
+                EntryType: EntryType.Revenue),
+            cancellationToken);
+
+        Assert.Equal(500m, summary.TotalRevenue);
+        Assert.Equal(0m, summary.TotalExpense);
+        Assert.Equal(500m, summary.NetBalance);
+
+        FinancialReportPeriodComparisonDto comparison = Assert.IsType<FinancialReportPeriodComparisonDto>(summary.PeriodComparison);
+        Assert.Equal(300m, comparison.PreviousTotalRevenue);
+        Assert.Equal(0m, comparison.PreviousTotalExpense);
+        Assert.Equal(300m, comparison.PreviousNetBalance);
+    }
 }

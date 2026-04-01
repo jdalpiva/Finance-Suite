@@ -305,7 +305,7 @@
         </TabItem>
 
         <TabItem Header="Relatórios">
-          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
+          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="12">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
               <TextBlock FontSize="20" FontWeight="SemiBold" Text="Relatórios financeiros" />
               <TextBlock Opacity="0.72" Text="{Binding ReportsModule.Summary}" />
@@ -348,6 +348,16 @@
             </Grid>
 
             <Border Grid.Row="3" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+              <StackPanel Spacing="8">
+                <TextBlock FontWeight="SemiBold" Text="Comparativo com período anterior" />
+                <TextBlock Opacity="0.72" Text="{Binding ReportsModule.PeriodComparisonDisplay}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ReportsModule.RevenueComparisonDisplay}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ReportsModule.ExpenseComparisonDisplay}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding ReportsModule.NetBalanceComparisonDisplay}" TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+
+            <Border Grid.Row="4" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
               <Grid RowDefinitions="Auto,*" RowSpacing="8">
                 <TextBlock FontWeight="SemiBold" Text="Breakdown mensal" />
                 <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByMonth}">
@@ -367,7 +377,7 @@
               </Grid>
             </Border>
 
-            <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="16">
+            <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="16">
               <Border Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
                 <Grid RowDefinitions="Auto,*" RowSpacing="8">
                   <TextBlock FontWeight="SemiBold" Text="Breakdown por cliente" />

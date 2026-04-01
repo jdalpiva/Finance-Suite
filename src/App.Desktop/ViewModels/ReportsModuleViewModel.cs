@@ -89,6 +89,43 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
 
     public string NetBalanceDisplay => _summary.NetBalance.ToString("C", PortugueseCulture);
 
+    public bool HasPeriodComparison => _summary.PeriodComparison is not null;
+
+    public string PeriodComparisonDisplay
+    {
+        get
+        {
+            FinancialReportPeriodComparisonDto? comparison = _summary.PeriodComparison;
+
+            if (comparison is null)
+            {
+                return "Comparativo disponível ao definir data inicial e final do período.";
+            }
+
+            string currentFrom = comparison.CurrentFrom.ToString("dd/MM/yyyy", PortugueseCulture);
+            string currentTo = comparison.CurrentTo.ToString("dd/MM/yyyy", PortugueseCulture);
+            string previousFrom = comparison.PreviousFrom.ToString("dd/MM/yyyy", PortugueseCulture);
+            string previousTo = comparison.PreviousTo.ToString("dd/MM/yyyy", PortugueseCulture);
+
+            return $"Atual: {currentFrom} até {currentTo} • Anterior: {previousFrom} até {previousTo}";
+        }
+    }
+
+    public string RevenueComparisonDisplay => BuildComparisonDisplay(
+        label: "Receita",
+        currentAmount: _summary.TotalRevenue,
+        previousAmount: _summary.PeriodComparison?.PreviousTotalRevenue);
+
+    public string ExpenseComparisonDisplay => BuildComparisonDisplay(
+        label: "Despesa",
+        currentAmount: _summary.TotalExpense,
+        previousAmount: _summary.PeriodComparison?.PreviousTotalExpense);
+
+    public string NetBalanceComparisonDisplay => BuildComparisonDisplay(
+        label: "Saldo",
+        currentAmount: _summary.NetBalance,
+        previousAmount: _summary.PeriodComparison?.PreviousNetBalance);
+
     public string PeriodDisplay
     {
         get
@@ -118,6 +155,11 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         OnPropertyChanged(nameof(TotalExpenseDisplay));
         OnPropertyChanged(nameof(NetBalanceDisplay));
         OnPropertyChanged(nameof(PeriodDisplay));
+        OnPropertyChanged(nameof(HasPeriodComparison));
+        OnPropertyChanged(nameof(PeriodComparisonDisplay));
+        OnPropertyChanged(nameof(RevenueComparisonDisplay));
+        OnPropertyChanged(nameof(ExpenseComparisonDisplay));
+        OnPropertyChanged(nameof(NetBalanceComparisonDisplay));
     }
 
     public async Task ApplyFiltersAsync(CancellationToken cancellationToken = default)
@@ -202,6 +244,40 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         string from = _summary.From?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "inicio";
         string to = _summary.To?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "hoje";
         return $"relatorio-financeiro-{from}-a-{to}.csv";
+    }
+
+    private string BuildComparisonDisplay(string label, decimal currentAmount, decimal? previousAmount)
+    {
+        if (previousAmount is null)
+        {
+            return $"{label}: comparativo indisponível";
+        }
+
+        decimal previous = previousAmount.Value;
+        decimal variation = currentAmount - previous;
+        decimal? variationPercent = previous == 0m
+            ? null
+            : variation / Math.Abs(previous);
+
+        string currentDisplay = currentAmount.ToString("C", PortugueseCulture);
+        string previousDisplay = previous.ToString("C", PortugueseCulture);
+        string variationDisplay = FormatSignedCurrency(variation);
+        string variationPercentDisplay = variationPercent is null
+            ? "n/d"
+            : variationPercent.Value.ToString("+0.00%;-0.00%;0.00%", PortugueseCulture);
+
+        return $"{label}: atual {currentDisplay} | anterior {previousDisplay} | variação {variationDisplay} ({variationPercentDisplay})";
+    }
+
+    private string FormatSignedCurrency(decimal value)
+    {
+        if (value == 0m)
+        {
+            return value.ToString("C", PortugueseCulture);
+        }
+
+        string absoluteValueDisplay = Math.Abs(value).ToString("C", PortugueseCulture);
+        return value > 0m ? $"+{absoluteValueDisplay}" : $"-{absoluteValueDisplay}";
     }
 
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

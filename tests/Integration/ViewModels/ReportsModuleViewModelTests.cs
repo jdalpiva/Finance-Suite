@@ -73,6 +73,28 @@ public sealed class ReportsModuleViewModelTests
         Assert.Equal(350m, exporter.LastSummary.TotalExpense);
     }
 
+    [Fact]
+    public async Task LoadAsync_ShouldExposeComparisonDisplays_WhenPeriodComparisonIsAvailable()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        var service = new FakeReportsService();
+        var viewModel = new ReportsModuleViewModel(service, new FakeReportCsvExporter())
+        {
+            FilterFrom = "2026-03-10",
+            FilterTo = "2026-03-14"
+        };
+
+        await viewModel.LoadAsync(cancellationToken);
+
+        Assert.True(viewModel.HasPeriodComparison);
+        Assert.Contains("Atual: 10/03/2026 até 14/03/2026", viewModel.PeriodComparisonDisplay);
+        Assert.Contains("Anterior: 05/03/2026 até 09/03/2026", viewModel.PeriodComparisonDisplay);
+        Assert.Contains("Receita: atual", viewModel.RevenueComparisonDisplay);
+        Assert.Contains("Despesa: atual", viewModel.ExpenseComparisonDisplay);
+        Assert.Contains("Saldo: atual", viewModel.NetBalanceComparisonDisplay);
+    }
+
     private sealed class FakeReportsService : IFinancialReportsService
     {
         public FinancialReportFilter? LastFilter { get; private set; }
@@ -80,6 +102,26 @@ public sealed class ReportsModuleViewModelTests
         public Task<FinancialReportSummaryDto> GetSummaryAsync(FinancialReportFilter? filter = null, CancellationToken cancellationToken = default)
         {
             LastFilter = filter;
+
+            FinancialReportPeriodComparisonDto? periodComparison = null;
+            DateOnly? from = filter?.From;
+            DateOnly? to = filter?.To;
+
+            if (from is not null && to is not null)
+            {
+                int currentPeriodLength = to.Value.DayNumber - from.Value.DayNumber + 1;
+                DateOnly previousTo = from.Value.AddDays(-1);
+                DateOnly previousFrom = previousTo.AddDays(-(currentPeriodLength - 1));
+
+                periodComparison = new FinancialReportPeriodComparisonDto(
+                    CurrentFrom: from.Value,
+                    CurrentTo: to.Value,
+                    PreviousFrom: previousFrom,
+                    PreviousTo: previousTo,
+                    PreviousTotalRevenue: 1000m,
+                    PreviousTotalExpense: 200m,
+                    PreviousNetBalance: 800m);
+            }
 
             FinancialReportSummaryDto summary = new(
                 From: filter?.From,
@@ -115,7 +157,8 @@ public sealed class ReportsModuleViewModelTests
                         TotalRevenue: 1200m,
                         TotalExpense: 0m,
                         NetBalance: 1200m)
-                ]);
+                ],
+                PeriodComparison: periodComparison);
 
             return Task.FromResult(summary);
         }

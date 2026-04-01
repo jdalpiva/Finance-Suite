@@ -22,21 +22,8 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
         await using AppDbContext dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         IQueryable<Core.Domain.Entities.FinancialEntry> query = dbContext.FinancialEntries.AsNoTracking();
-
-        if (filter.From is not null)
-        {
-            query = query.Where(entry => entry.OccurredOn >= filter.From.Value);
-        }
-
-        if (filter.To is not null)
-        {
-            query = query.Where(entry => entry.OccurredOn <= filter.To.Value);
-        }
-
-        if (filter.EntryType is not null)
-        {
-            query = query.Where(entry => entry.EntryType == filter.EntryType.Value);
-        }
+        query = ApplyPeriodFilter(query, filter.From, filter.To);
+        query = ApplyEntryTypeFilter(query, filter.EntryType);
 
         decimal totalRevenue = await query
             .Where(entry => entry.EntryType == EntryType.Revenue)
@@ -156,6 +143,8 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             })
             .ToList();
 
+        FinancialReportPeriodComparisonDto? periodComparison = await BuildPeriodComparisonAsync(dbContext, filter, cancellationToken);
+
         return new FinancialReportSummaryDto(
             From: filter.From,
             To: filter.To,
@@ -164,7 +153,107 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             NetBalance: totalRevenue - totalExpense,
             BreakdownByMonth: monthlyBreakdown,
             BreakdownByCustomer: customerBreakdown,
-            BreakdownByProductService: productBreakdown);
+            BreakdownByProductService: productBreakdown,
+            PeriodComparison: periodComparison);
+    }
+
+    private static async Task<FinancialReportPeriodComparisonDto?> BuildPeriodComparisonAsync(
+        AppDbContext dbContext,
+        FinancialReportFilter filter,
+        CancellationToken cancellationToken)
+    {
+        // Regra da Sprint 15: comparar o período atual com o período imediatamente anterior,
+        // mantendo a mesma duração em dias corridos (intervalo inclusivo).
+        if (!TryResolveComparisonPeriod(filter, out DateOnly currentFrom, out DateOnly currentTo, out DateOnly previousFrom, out DateOnly previousTo))
+        {
+            return null;
+        }
+
+        IQueryable<Core.Domain.Entities.FinancialEntry> previousQuery = dbContext.FinancialEntries.AsNoTracking();
+        previousQuery = ApplyPeriodFilter(previousQuery, previousFrom, previousTo);
+        previousQuery = ApplyEntryTypeFilter(previousQuery, filter.EntryType);
+
+        decimal previousTotalRevenue = await previousQuery
+            .Where(entry => entry.EntryType == EntryType.Revenue)
+            .SumAsync(entry => (decimal?)entry.Amount, cancellationToken) ?? 0m;
+
+        decimal previousTotalExpense = await previousQuery
+            .Where(entry => entry.EntryType == EntryType.Expense)
+            .SumAsync(entry => (decimal?)entry.Amount, cancellationToken) ?? 0m;
+
+        return new FinancialReportPeriodComparisonDto(
+            CurrentFrom: currentFrom,
+            CurrentTo: currentTo,
+            PreviousFrom: previousFrom,
+            PreviousTo: previousTo,
+            PreviousTotalRevenue: previousTotalRevenue,
+            PreviousTotalExpense: previousTotalExpense,
+            PreviousNetBalance: previousTotalRevenue - previousTotalExpense);
+    }
+
+    private static bool TryResolveComparisonPeriod(
+        FinancialReportFilter filter,
+        out DateOnly currentFrom,
+        out DateOnly currentTo,
+        out DateOnly previousFrom,
+        out DateOnly previousTo)
+    {
+        currentFrom = default;
+        currentTo = default;
+        previousFrom = default;
+        previousTo = default;
+
+        if (filter.From is null || filter.To is null)
+        {
+            return false;
+        }
+
+        currentFrom = filter.From.Value;
+        currentTo = filter.To.Value;
+
+        int currentPeriodLengthInDays = currentTo.DayNumber - currentFrom.DayNumber + 1;
+
+        try
+        {
+            previousTo = currentFrom.AddDays(-1);
+            previousFrom = previousTo.AddDays(-(currentPeriodLengthInDays - 1));
+        }
+        catch (ArgumentOutOfRangeException)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private static IQueryable<Core.Domain.Entities.FinancialEntry> ApplyPeriodFilter(
+        IQueryable<Core.Domain.Entities.FinancialEntry> query,
+        DateOnly? from,
+        DateOnly? to)
+    {
+        if (from is not null)
+        {
+            query = query.Where(entry => entry.OccurredOn >= from.Value);
+        }
+
+        if (to is not null)
+        {
+            query = query.Where(entry => entry.OccurredOn <= to.Value);
+        }
+
+        return query;
+    }
+
+    private static IQueryable<Core.Domain.Entities.FinancialEntry> ApplyEntryTypeFilter(
+        IQueryable<Core.Domain.Entities.FinancialEntry> query,
+        EntryType? entryType)
+    {
+        if (entryType is null)
+        {
+            return query;
+        }
+
+        return query.Where(entry => entry.EntryType == entryType.Value);
     }
 
     private static string ResolveCustomerLabel(Guid? customerId, IReadOnlyDictionary<Guid, string> customerNames)
