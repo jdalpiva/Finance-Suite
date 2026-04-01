@@ -131,7 +131,7 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
             throw new InvalidOperationException("Informe um valor válido. Exemplo: 1500,50");
         }
 
-        DateOnly occurredOn = ParseRequiredDate(NewEntryOccurredOn, "Data do lançamento");
+        DateOnly occurredOn = DateOnlyInputParser.ParseRequired(NewEntryOccurredOn, "Data do lançamento");
 
         EntryType entryType = SelectedFormEntryType == "Despesa"
             ? EntryType.Expense
@@ -152,31 +152,6 @@ public sealed class FinancialEntryFormViewModel : INotifyPropertyChanged
         }
 
         return decimal.TryParse(rawAmount, NumberStyles.Number, CultureInfo.InvariantCulture, out amount);
-    }
-
-    private static DateOnly ParseRequiredDate(string rawDate, string fieldName)
-    {
-        if (TryParseDate(rawDate, out DateOnly parsedDate))
-        {
-            return parsedDate;
-        }
-
-        throw new InvalidOperationException($"{fieldName} inválida. Use yyyy-MM-dd.");
-    }
-
-    private static bool TryParseDate(string rawDate, out DateOnly parsedDate)
-    {
-        if (DateOnly.TryParseExact(rawDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        if (DateOnly.TryParse(rawDate, PortugueseCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        return DateOnly.TryParse(rawDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate);
     }
 
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

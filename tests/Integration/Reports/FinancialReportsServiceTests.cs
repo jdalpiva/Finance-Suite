@@ -53,6 +53,20 @@ public sealed class FinancialReportsServiceTests
         Assert.Equal(300m, summary.TotalExpense);
         Assert.Equal(1350m, summary.NetBalance);
 
+        FinancialReportMonthlyBreakdownItemDto march = Assert.Single(
+            summary.BreakdownByMonth,
+            item => item.Year == 2026 && item.Month == 3);
+        Assert.Equal(1500m, march.TotalRevenue);
+        Assert.Equal(300m, march.TotalExpense);
+        Assert.Equal(1200m, march.NetBalance);
+
+        FinancialReportMonthlyBreakdownItemDto april = Assert.Single(
+            summary.BreakdownByMonth,
+            item => item.Year == 2026 && item.Month == 4);
+        Assert.Equal(150m, april.TotalRevenue);
+        Assert.Equal(0m, april.TotalExpense);
+        Assert.Equal(150m, april.NetBalance);
+
         FinancialReportBreakdownItemDto customerAItem = Assert.Single(summary.BreakdownByCustomer, item => item.Label == "Cliente Alfa");
         Assert.Equal(1000m, customerAItem.TotalRevenue);
         Assert.Equal(200m, customerAItem.TotalExpense);
@@ -100,5 +114,10 @@ public sealed class FinancialReportsServiceTests
         Assert.Equal(900m, summary.TotalRevenue);
         Assert.Equal(250m, summary.TotalExpense);
         Assert.Equal(650m, summary.NetBalance);
+        FinancialReportMonthlyBreakdownItemDto march = Assert.Single(summary.BreakdownByMonth);
+        Assert.Equal(2026, march.Year);
+        Assert.Equal(3, march.Month);
+        Assert.Equal(900m, march.TotalRevenue);
+        Assert.Equal(250m, march.TotalExpense);
     }
 }

@@ -25,6 +25,8 @@ public sealed class ReportsModuleViewModelTests
         Assert.Equal(new DateOnly(2026, 3, 31), service.LastFilter?.To);
         Assert.Contains("1.200,00", viewModel.TotalRevenueDisplay);
         Assert.Contains("350,00", viewModel.TotalExpenseDisplay);
+        FinancialReportMonthlyBreakdownItemViewModel monthly = Assert.Single(viewModel.BreakdownByMonth);
+        Assert.Equal("03/2026", monthly.MonthDisplay);
         Assert.Single(viewModel.BreakdownByCustomer);
         Assert.Single(viewModel.BreakdownByProductService);
     }
@@ -43,6 +45,15 @@ public sealed class ReportsModuleViewModelTests
                 TotalRevenue: 1200m,
                 TotalExpense: 350m,
                 NetBalance: 850m,
+                BreakdownByMonth:
+                [
+                    new FinancialReportMonthlyBreakdownItemDto(
+                        Year: 2026,
+                        Month: 3,
+                        TotalRevenue: 1200m,
+                        TotalExpense: 350m,
+                        NetBalance: 850m)
+                ],
                 BreakdownByCustomer:
                 [
                     new FinancialReportBreakdownItemDto(

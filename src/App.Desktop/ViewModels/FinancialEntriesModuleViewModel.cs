@@ -244,8 +244,8 @@ public sealed class FinancialEntriesModuleViewModel : INotifyPropertyChanged
 
     private FinancialEntriesFilter BuildFilter()
     {
-        DateOnly? from = ParseOptionalDate(FilterFrom, "Data inicial");
-        DateOnly? to = ParseOptionalDate(FilterTo, "Data final");
+        DateOnly? from = DateOnlyInputParser.ParseOptional(FilterFrom, "Data inicial");
+        DateOnly? to = DateOnlyInputParser.ParseOptional(FilterTo, "Data final");
 
         EntryType? entryType = SelectedFilterType switch
         {
@@ -276,36 +276,6 @@ public sealed class FinancialEntriesModuleViewModel : INotifyPropertyChanged
         _deleteConfirmationEntryId = null;
         OnPropertyChanged(nameof(IsDeleteConfirmationPending));
         OnPropertyChanged(nameof(DeleteSelectedButtonLabel));
-    }
-
-    private static DateOnly? ParseOptionalDate(string rawDate, string fieldName)
-    {
-        if (string.IsNullOrWhiteSpace(rawDate))
-        {
-            return null;
-        }
-
-        if (TryParseDate(rawDate, out DateOnly parsedDate))
-        {
-            return parsedDate;
-        }
-
-        throw new InvalidOperationException($"{fieldName} inválida. Use yyyy-MM-dd.");
-    }
-
-    private static bool TryParseDate(string rawDate, out DateOnly parsedDate)
-    {
-        if (DateOnly.TryParseExact(rawDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        if (DateOnly.TryParse(rawDate, PortugueseCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        return DateOnly.TryParse(rawDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate);
     }
 
     private static string ToEntryTypeLabel(EntryType entryType)

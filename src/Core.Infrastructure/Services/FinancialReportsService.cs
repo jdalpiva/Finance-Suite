@@ -41,6 +41,30 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             .Where(entry => entry.EntryType == EntryType.Expense)
             .SumAsync(entry => (decimal?)entry.Amount, cancellationToken) ?? 0m;
 
+        IReadOnlyList<FinancialReportMonthlyBreakdownItemDto> monthlyBreakdown = (await query
+            .Select(entry => new MonthlyProjection(entry.OccurredOn, entry.EntryType, entry.Amount))
+            .ToListAsync(cancellationToken))
+            .GroupBy(entry => new { entry.OccurredOn.Year, entry.OccurredOn.Month })
+            .Select(group =>
+            {
+                decimal monthlyRevenue = group
+                    .Where(entry => entry.EntryType == EntryType.Revenue)
+                    .Sum(entry => entry.Amount);
+                decimal monthlyExpense = group
+                    .Where(entry => entry.EntryType == EntryType.Expense)
+                    .Sum(entry => entry.Amount);
+
+                return new FinancialReportMonthlyBreakdownItemDto(
+                    Year: group.Key.Year,
+                    Month: group.Key.Month,
+                    TotalRevenue: monthlyRevenue,
+                    TotalExpense: monthlyExpense,
+                    NetBalance: monthlyRevenue - monthlyExpense);
+            })
+            .OrderBy(item => item.Year)
+            .ThenBy(item => item.Month)
+            .ToList();
+
         List<BreakdownRow> customerRows = (await query
             .GroupBy(entry => entry.CustomerId)
             .Select(group => new
@@ -133,6 +157,7 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
             TotalRevenue: totalRevenue,
             TotalExpense: totalExpense,
             NetBalance: totalRevenue - totalExpense,
+            BreakdownByMonth: monthlyBreakdown,
             BreakdownByCustomer: customerBreakdown,
             BreakdownByProductService: productBreakdown);
     }
@@ -172,6 +197,8 @@ public sealed class FinancialReportsService(IDbContextFactory<AppDbContext> dbCo
     }
 
     private sealed record BreakdownRow(Guid? ReferenceId, decimal TotalRevenue, decimal TotalExpense);
+
+    private sealed record MonthlyProjection(DateOnly OccurredOn, EntryType EntryType, decimal Amount);
 
     private sealed record ProductSnapshot(string Name, string Category);
 }

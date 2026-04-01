@@ -12,7 +12,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 9: módulo de relatórios com visão de período e breakdown por cliente e produto/serviço." />
+      <TextBlock Opacity="0.72" Text="Sprint 10: evolução de relatórios com granularidade temporal mensal." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 
@@ -303,7 +303,7 @@
         </TabItem>
 
         <TabItem Header="Relatórios">
-          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="12">
+          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,*" RowSpacing="12">
             <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
               <TextBlock FontSize="20" FontWeight="SemiBold" Text="Relatórios financeiros" />
               <TextBlock Opacity="0.72" Text="{Binding ReportsModule.Summary}" />
@@ -343,7 +343,27 @@
               </Grid>
             </Grid>
 
-            <Grid Grid.Row="3" ColumnDefinitions="*,*" ColumnSpacing="16">
+            <Border Grid.Row="3" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
+              <Grid RowDefinitions="Auto,*" RowSpacing="8">
+                <TextBlock FontWeight="SemiBold" Text="Breakdown mensal" />
+                <ListBox Grid.Row="1" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByMonth}">
+                  <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:FinancialReportMonthlyBreakdownItemViewModel">
+                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                          <TextBlock FontWeight="SemiBold" Text="{Binding MonthDisplay}" />
+                          <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
+                          <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
+                          <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+              </Grid>
+            </Border>
+
+            <Grid Grid.Row="4" ColumnDefinitions="*,*" ColumnSpacing="16">
               <Border Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
                 <Grid RowDefinitions="Auto,*" RowSpacing="8">
                   <TextBlock FontWeight="SemiBold" Text="Breakdown por cliente" />

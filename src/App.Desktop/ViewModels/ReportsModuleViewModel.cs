@@ -22,11 +22,14 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
     public ReportsModuleViewModel(IFinancialReportsService financialReportsService)
     {
         _financialReportsService = financialReportsService;
+        BreakdownByMonth.CollectionChanged += OnBreakdownCollectionsChanged;
         BreakdownByCustomer.CollectionChanged += OnBreakdownCollectionsChanged;
         BreakdownByProductService.CollectionChanged += OnBreakdownCollectionsChanged;
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
+
+    public ObservableCollection<FinancialReportMonthlyBreakdownItemViewModel> BreakdownByMonth { get; } = [];
 
     public ObservableCollection<FinancialReportBreakdownItemViewModel> BreakdownByCustomer { get; } = [];
 
@@ -79,7 +82,7 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         }
     }
 
-    public string Summary => $"{BreakdownByCustomer.Count} clientes • {BreakdownByProductService.Count} itens";
+    public string Summary => $"{BreakdownByMonth.Count} meses • {BreakdownByCustomer.Count} clientes • {BreakdownByProductService.Count} itens";
 
     public void SetBusy(bool isBusy)
     {
@@ -114,6 +117,18 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
 
     private void PopulateBreakdowns(FinancialReportSummaryDto summary)
     {
+        BreakdownByMonth.Clear();
+
+        foreach (FinancialReportMonthlyBreakdownItemDto item in summary.BreakdownByMonth)
+        {
+            BreakdownByMonth.Add(new FinancialReportMonthlyBreakdownItemViewModel(
+                year: item.Year,
+                month: item.Month,
+                totalRevenue: item.TotalRevenue,
+                totalExpense: item.TotalExpense,
+                netBalance: item.NetBalance));
+        }
+
         BreakdownByCustomer.Clear();
 
         foreach (FinancialReportBreakdownItemDto item in summary.BreakdownByCustomer)
@@ -143,40 +158,10 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
 
     private FinancialReportFilter BuildFilter()
     {
-        DateOnly? from = ParseOptionalDate(FilterFrom, "Data inicial");
-        DateOnly? to = ParseOptionalDate(FilterTo, "Data final");
+        DateOnly? from = DateOnlyInputParser.ParseOptional(FilterFrom, "Data inicial");
+        DateOnly? to = DateOnlyInputParser.ParseOptional(FilterTo, "Data final");
 
         return new FinancialReportFilter(From: from, To: to);
-    }
-
-    private static DateOnly? ParseOptionalDate(string rawDate, string fieldName)
-    {
-        if (string.IsNullOrWhiteSpace(rawDate))
-        {
-            return null;
-        }
-
-        if (TryParseDate(rawDate, out DateOnly parsedDate))
-        {
-            return parsedDate;
-        }
-
-        throw new InvalidOperationException($"{fieldName} inválida. Use yyyy-MM-dd.");
-    }
-
-    private static bool TryParseDate(string rawDate, out DateOnly parsedDate)
-    {
-        if (DateOnly.TryParseExact(rawDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        if (DateOnly.TryParse(rawDate, PortugueseCulture, DateTimeStyles.None, out parsedDate))
-        {
-            return true;
-        }
-
-        return DateOnly.TryParse(rawDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out parsedDate);
     }
 
     private bool SetProperty<T>(ref T storage, T value, [CallerMemberName] string? propertyName = null)

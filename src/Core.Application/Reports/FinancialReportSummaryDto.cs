@@ -6,6 +6,7 @@ public sealed record FinancialReportSummaryDto(
     decimal TotalRevenue,
     decimal TotalExpense,
     decimal NetBalance,
+    IReadOnlyList<FinancialReportMonthlyBreakdownItemDto> BreakdownByMonth,
     IReadOnlyList<FinancialReportBreakdownItemDto> BreakdownByCustomer,
     IReadOnlyList<FinancialReportBreakdownItemDto> BreakdownByProductService)
 {
@@ -15,6 +16,7 @@ public sealed record FinancialReportSummaryDto(
         TotalRevenue: 0m,
         TotalExpense: 0m,
         NetBalance: 0m,
+        BreakdownByMonth: [],
         BreakdownByCustomer: [],
         BreakdownByProductService: []);
 }
