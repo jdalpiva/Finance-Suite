@@ -25,6 +25,9 @@ public sealed class FinancialReportCsvExporter : IFinancialReportCsvExporter
         WriteRow(builder, "Saldo", FormatAmount(summary.NetBalance));
         WriteBlankLine(builder);
 
+        WriteComparisonSection(builder, summary);
+        WriteBlankLine(builder);
+
         WriteSectionTitle(builder, "Breakdown mensal");
         WriteRow(builder, "Mês", "Receitas", "Despesas", "Saldo");
         foreach (FinancialReportMonthlyBreakdownItemDto item in summary.BreakdownByMonth)
@@ -60,6 +63,48 @@ public sealed class FinancialReportCsvExporter : IFinancialReportCsvExporter
         return builder.ToString();
     }
 
+    private static void WriteComparisonSection(StringBuilder builder, FinancialReportSummaryDto summary)
+    {
+        WriteSectionTitle(builder, "Comparativo entre períodos");
+
+        FinancialReportPeriodComparisonDto? comparison = summary.PeriodComparison;
+
+        if (comparison is null)
+        {
+            WriteRow(builder, "Status", "Comparativo indisponível. Defina data inicial e final do período.");
+            return;
+        }
+
+        WriteRow(builder, "Métrica", "Período atual", "Período anterior", "Variação absoluta", "Variação percentual");
+        WriteRow(
+            builder,
+            "Período",
+            FormatPeriodRange(comparison.CurrentFrom, comparison.CurrentTo),
+            FormatPeriodRange(comparison.PreviousFrom, comparison.PreviousTo),
+            "-",
+            "-");
+
+        WriteComparisonMetricRow(builder, "Receita", summary.TotalRevenue, comparison.PreviousTotalRevenue);
+        WriteComparisonMetricRow(builder, "Despesa", summary.TotalExpense, comparison.PreviousTotalExpense);
+        WriteComparisonMetricRow(builder, "Saldo", summary.NetBalance, comparison.PreviousNetBalance);
+    }
+
+    private static void WriteComparisonMetricRow(StringBuilder builder, string label, decimal currentValue, decimal previousValue)
+    {
+        decimal variationAbsolute = currentValue - previousValue;
+        decimal? variationPercent = previousValue == 0m
+            ? null
+            : variationAbsolute / Math.Abs(previousValue);
+
+        WriteRow(
+            builder,
+            label,
+            FormatAmount(currentValue),
+            FormatAmount(previousValue),
+            FormatSignedAmount(variationAbsolute),
+            FormatPercent(variationPercent));
+    }
+
     private static void WriteSectionTitle(StringBuilder builder, string title)
     {
         builder.AppendLine(Escape(title));
@@ -93,6 +138,32 @@ public sealed class FinancialReportCsvExporter : IFinancialReportCsvExporter
     private static string FormatAmount(decimal amount)
     {
         return amount.ToString("0.00", PortugueseCulture);
+    }
+
+    private static string FormatSignedAmount(decimal amount)
+    {
+        if (amount == 0m)
+        {
+            return FormatAmount(0m);
+        }
+
+        string absoluteAmount = FormatAmount(Math.Abs(amount));
+        return amount > 0m ? $"+{absoluteAmount}" : $"-{absoluteAmount}";
+    }
+
+    private static string FormatPercent(decimal? value)
+    {
+        if (value is null)
+        {
+            return "n/d";
+        }
+
+        return value.Value.ToString("+0.00%;-0.00%;0.00%", PortugueseCulture);
+    }
+
+    private static string FormatPeriodRange(DateOnly from, DateOnly to)
+    {
+        return $"{FormatDate(from)} até {FormatDate(to)}";
     }
 
     private static string Escape(string value)
