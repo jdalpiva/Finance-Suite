@@ -47,7 +47,14 @@ dotnet --list-sdks
 ```bash
 dotnet restore SMEFinanceSuite.sln
 dotnet build SMEFinanceSuite.sln
-dotnet test SMEFinanceSuite.sln
+./scripts/test-stable.sh
+```
+
+Para execução direta sem script, mantenha a suíte previsível executando os projetos de teste em sequência:
+
+```bash
+dotnet test tests/Unit/Unit.csproj -m:1 --disable-build-servers
+dotnet test tests/Integration/Integration.csproj -m:1 --disable-build-servers
 ```
 
 ## Como executar o desktop

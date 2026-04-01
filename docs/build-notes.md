@@ -55,3 +55,26 @@ Comandos úteis para schema:
 dotnet ef migrations add NomeDaMigration --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
 dotnet ef database update --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
 ```
+
+## Estabilidade de testes (Sprint 20 - 2026-04-01)
+
+Sintoma observado:
+
+- `dotnet test SMEFinanceSuite.sln` apresentou falha intermitente de runtime com `Fatal error. Internal CLR error. (0x80131506)`.
+
+Diagnóstico pragmático:
+
+- `dotnet build SMEFinanceSuite.sln` repetido ficou estável.
+- `dotnet test` por projeto (`Unit` e `Integration`) em sequência ficou estável.
+- O sintoma concentrou na execução agregada pela solution.
+
+Mitigação adotada:
+
+- Padronizar a execução da suíte via script `./scripts/test-stable.sh`.
+- O script executa `Unit` e `Integration` de forma sequencial, com `-m:1` e `--disable-build-servers`.
+
+Motivo da escolha:
+
+- Mudança pequena, sem impacto no código de produção.
+- Aumenta previsibilidade da suíte imediatamente.
+- Evita abrir escopo de refatoração ampla de fixtures/infra sem evidência de necessidade.
