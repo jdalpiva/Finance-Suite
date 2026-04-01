@@ -152,6 +152,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void OnToggleSelectedProductServiceActiveClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is MainWindowViewModel viewModel)
+        {
+            await viewModel.ToggleSelectedProductServiceActiveAsync();
+        }
+    }
+
     private async void OnUpdateSelectedProductServiceClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is MainWindowViewModel viewModel)

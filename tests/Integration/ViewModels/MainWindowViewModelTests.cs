@@ -51,6 +51,45 @@ public sealed class MainWindowViewModelTests
         Assert.Empty(viewModel.CustomersModule.Customers);
     }
 
+    [Fact]
+    public async Task ToggleSelectedProductServiceActiveAsync_ShouldUpdateAvailabilityAndSyncFormReferences()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        var productServiceId = Guid.NewGuid();
+        var productCatalogService = new FakeProductCatalogService(
+            [
+                new ProductServiceListItemDto(
+                    Id: productServiceId,
+                    Name: "Plano Ativo",
+                    Category: "Serviços",
+                    UnitPrice: 120m,
+                    IsService: true,
+                    IsActive: true)
+            ]);
+
+        var viewModel = new MainWindowViewModel(
+            financialDashboardService: new FakeDashboardService(),
+            financialReportsService: new FakeReportsService(),
+            financialReportCsvExporter: new FakeReportCsvExporter(),
+            financialEntryService: new FakeFinancialEntryService(),
+            customerService: new FakeCustomerService([]),
+            productCatalogService: productCatalogService);
+
+        await viewModel.InitializeAsync(cancellationToken);
+
+        viewModel.ProductCatalogModule.SelectedProductService = Assert.Single(viewModel.ProductCatalogModule.ProductServices);
+        viewModel.FinancialEntriesModule.Form.SelectedProductServiceId = productServiceId;
+
+        await viewModel.ToggleSelectedProductServiceActiveAsync(cancellationToken);
+
+        ProductServiceListItemViewModel currentItem = Assert.Single(viewModel.ProductCatalogModule.ProductServices);
+        Assert.False(currentItem.IsActive);
+        Assert.Empty(viewModel.ProductCatalogModule.ActiveProductServices);
+        Assert.Null(viewModel.FinancialEntriesModule.Form.SelectedProductServiceId);
+        Assert.Equal(1, productCatalogService.UpdateCalls);
+    }
+
     private sealed class FakeDashboardService : IFinancialDashboardService
     {
         public Task<DashboardSummaryDto> GetSummaryAsync(DateOnly? from = null, DateOnly? to = null, CancellationToken cancellationToken = default)
@@ -130,6 +169,15 @@ public sealed class MainWindowViewModelTests
 
     private sealed class FakeProductCatalogService : IProductCatalogService
     {
+        private readonly List<ProductServiceListItemDto> _items;
+
+        public FakeProductCatalogService(IEnumerable<ProductServiceListItemDto>? seedItems = null)
+        {
+            _items = seedItems?.ToList() ?? [];
+        }
+
+        public int UpdateCalls { get; private set; }
+
         public Task<Guid> RegisterAsync(CreateProductServiceCommand command, CancellationToken cancellationToken = default)
         {
             throw new NotSupportedException();
@@ -137,7 +185,23 @@ public sealed class MainWindowViewModelTests
 
         public Task UpdateAsync(UpdateProductServiceCommand command, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            int index = _items.FindIndex(item => item.Id == command.Id);
+
+            if (index < 0)
+            {
+                throw new InvalidOperationException("Produto/serviço informado não foi encontrado.");
+            }
+
+            _items[index] = new ProductServiceListItemDto(
+                Id: command.Id,
+                Name: command.Name,
+                Category: command.Category,
+                UnitPrice: command.UnitPrice,
+                IsService: command.IsService,
+                IsActive: command.IsActive);
+
+            UpdateCalls++;
+            return Task.CompletedTask;
         }
 
         public Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
@@ -147,7 +211,8 @@ public sealed class MainWindowViewModelTests
 
         public Task<IReadOnlyList<ProductServiceListItemDto>> ListAsync(CancellationToken cancellationToken = default)
         {
-            return Task.FromResult<IReadOnlyList<ProductServiceListItemDto>>([]);
+            IReadOnlyList<ProductServiceListItemDto> snapshot = _items.ToList();
+            return Task.FromResult(snapshot);
         }
     }
 }

@@ -444,6 +444,37 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    public async Task ToggleSelectedProductServiceActiveAsync(CancellationToken cancellationToken = default)
+    {
+        if (ProductCatalogModule.SelectedProductService is null)
+        {
+            StatusMessage = "Selecione um produto/serviço para ativar ou inativar.";
+            return;
+        }
+
+        if (!TryBeginBusyOperation())
+        {
+            return;
+        }
+
+        try
+        {
+            await ProductCatalogModule.ToggleSelectedActiveAsync(cancellationToken);
+            SyncFinancialEntriesFormReferences();
+
+            string statusLabel = ProductCatalogModule.SelectedProductService?.IsActive == true ? "ativado" : "inativado";
+            StatusMessage = $"Produto/serviço {statusLabel} em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+        }
+        catch (Exception exception)
+        {
+            StatusMessage = $"Falha ao alterar status do produto/serviço: {exception.Message}";
+        }
+        finally
+        {
+            EndBusyOperation();
+        }
+    }
+
     public async Task DeleteSelectedProductServiceAsync(CancellationToken cancellationToken = default)
     {
         if (IsBusy)

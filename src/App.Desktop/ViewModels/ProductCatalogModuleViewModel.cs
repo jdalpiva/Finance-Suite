@@ -44,6 +44,7 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(CanRegister));
             OnPropertyChanged(nameof(CanUpdateSelected));
             OnPropertyChanged(nameof(CanDeleteSelected));
+            OnPropertyChanged(nameof(CanToggleSelectedActive));
         }
     }
 
@@ -53,9 +54,15 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
 
     public bool CanDeleteSelected => !IsBusy && SelectedProductService is not null;
 
+    public bool CanToggleSelectedActive => !IsBusy && SelectedProductService is not null;
+
     public bool IsDeleteConfirmationPending => _isDeleteConfirmationPending;
 
     public string DeleteSelectedButtonLabel => IsDeleteConfirmationPending ? "Confirmar exclusão" : "Excluir selecionado";
+
+    public string ToggleSelectedActiveButtonLabel => SelectedProductService is null
+        ? "Ativar/inativar selecionado"
+        : SelectedProductService.IsActive ? "Inativar selecionado" : "Ativar selecionado";
 
     public ProductServiceListItemViewModel? SelectedProductService
     {
@@ -70,6 +77,8 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
             ResetDeleteConfirmation();
             OnPropertyChanged(nameof(CanUpdateSelected));
             OnPropertyChanged(nameof(CanDeleteSelected));
+            OnPropertyChanged(nameof(CanToggleSelectedActive));
+            OnPropertyChanged(nameof(ToggleSelectedActiveButtonLabel));
 
             if (value is null)
             {
@@ -150,6 +159,29 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
         }
 
         UpdateProductServiceCommand command = Form.BuildUpdateCommand(SelectedProductService.Id);
+        await _productCatalogService.UpdateAsync(command, cancellationToken);
+
+        ResetDeleteConfirmation();
+        await LoadAsync(cancellationToken, selectedProductServiceId: command.Id);
+    }
+
+    public async Task ToggleSelectedActiveAsync(CancellationToken cancellationToken = default)
+    {
+        if (SelectedProductService is null)
+        {
+            throw new InvalidOperationException("Selecione um produto/serviço para alterar o status.");
+        }
+
+        ProductServiceListItemViewModel currentSelection = SelectedProductService;
+
+        var command = new UpdateProductServiceCommand(
+            Id: currentSelection.Id,
+            Name: currentSelection.Name,
+            Category: currentSelection.Category,
+            UnitPrice: currentSelection.UnitPrice,
+            IsService: currentSelection.IsService,
+            IsActive: !currentSelection.IsActive);
+
         await _productCatalogService.UpdateAsync(command, cancellationToken);
 
         ResetDeleteConfirmation();
