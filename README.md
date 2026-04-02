@@ -132,6 +132,22 @@ Resultado esperado:
 - o banco SQLite relativo continua sendo resolvido para a pasta de dados do usuário
 - em Linux sem sessão gráfica, o app agora falha com mensagem amigável orientando o uso em ambiente desktop com `DISPLAY` configurado
 
+Para um smoke totalmente isolado em `/tmp`, sem reutilizar a pasta padrão de dados do usuário, ajuste o `appsettings.json` copiado para usar um caminho absoluto de SQLite:
+
+```bash
+mkdir -p /tmp/smefs-release-smoke/data
+perl -0pi -e 's#Data Source=sme-finance-suite\.db#Data Source=/tmp/smefs-release-smoke/data/smoke-release.db#g' /tmp/smefs-release-smoke/app/appsettings.json
+DISPLAY=:0 WAYLAND_DISPLAY= HOME=/tmp/smefs-release-smoke/home /tmp/smefs-release-smoke/app/SMEFinanceSuite.Desktop
+```
+
+Smoke gráfico validado na Sprint 28:
+
+- o executável publicado abre fora do workspace de desenvolvimento
+- o título da janela sobe como `SME Finance Suite`
+- a leitura de `appsettings.json` foi confirmada apontando o SQLite para um caminho absoluto dentro de `/tmp`
+- a inicialização cria o banco isolado com schema e seed esperados (`1` cliente, `2` produtos/serviços e `4` lançamentos iniciais)
+- a validação visual aprofundada de cadastros, navegação entre abas e exportação CSV ainda deve ser concluída manualmente em uma sessão desktop limpa, porque a automação de entrada por `xdotool` ficou inconclusiva neste ambiente
+
 ## Banco de dados
 
 Por padrão, o app usa SQLite com nome de arquivo configurado em `appsettings.json`:

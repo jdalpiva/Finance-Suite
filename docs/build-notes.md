@@ -147,3 +147,39 @@ Resultado observado:
 Lacuna que permanece conhecida:
 
 - a abertura visual completa do app ainda precisa ser validada em uma sessão gráfica Linux real, fora do ambiente de desenvolvimento
+
+## Validação gráfica pragmática (Sprint 28 - 2026-04-02)
+
+Objetivo da etapa:
+
+- validar o artefato publicado em sessão gráfica real, fora do workspace de desenvolvimento, antes de avançar para empacotamento mais amigável
+
+Procedimento efetivamente validado:
+
+```bash
+rm -rf /tmp/smefs-release-smoke
+mkdir -p /tmp/smefs-release-smoke/data
+cp -R artifacts/desktop/linux-x64 /tmp/smefs-release-smoke/app
+perl -0pi -e 's#Data Source=sme-finance-suite\.db#Data Source=/tmp/smefs-release-smoke/data/smoke-release.db#g' /tmp/smefs-release-smoke/app/appsettings.json
+DISPLAY=:0 WAYLAND_DISPLAY= HOME=/tmp/smefs-release-smoke/home /tmp/smefs-release-smoke/app/SMEFinanceSuite.Desktop
+```
+
+Resultado validado:
+
+- o executável abre em sessão gráfica real com o título `SME Finance Suite`
+- a inicialização ocorre sem stderr relevante
+- o `appsettings.json` copiado foi realmente lido, porque a connection string absoluta criou o banco em `/tmp/smefs-release-smoke/data/smoke-release.db`
+- o banco isolado foi inicializado corretamente fora do workspace, com seed e schema esperados:
+  - `customers`: `1`
+  - `products_services`: `2`
+  - `financial_entries`: `4`
+
+Achado operacional relevante:
+
+- para smoke totalmente isolado em `/tmp`, usar apenas `HOME=/tmp/...` não foi suficiente para redirecionar a persistência do caminho relativo configurado por padrão
+- como mitigação pragmática de validação, a sprint passou a documentar o override temporário da connection string no `appsettings.json` copiado
+- isso não altera o comportamento oficial do produto: em uso normal, o caminho relativo continua sendo resolvido para a pasta local de dados do usuário
+
+Limitação remanescente:
+
+- a automação de entrada completa por `xdotool` ficou inconclusiva neste ambiente, então os fluxos de cadastro/edição/navegação detalhada e a exportação CSV ainda devem ser fechados com smoke manual em uma sessão desktop limpa
