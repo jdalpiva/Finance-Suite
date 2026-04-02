@@ -305,93 +305,127 @@
         </TabItem>
 
         <TabItem Header="Relatórios">
-          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="14">
-            <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-              <TextBlock FontSize="20" FontWeight="SemiBold" Text="Relatórios financeiros" />
-              <TextBlock Opacity="0.72" Text="{Binding ReportsModule.Summary}" />
-            </StackPanel>
-
-            <Border Grid.Row="1" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-              <StackPanel Spacing="10">
-                <TextBlock FontSize="14" FontWeight="SemiBold" Text="Filtros do relatório" />
-                <Grid ColumnDefinitions="*,*,Auto,Auto,Auto,Auto" ColumnSpacing="8">
-                  <TextBox Watermark="De (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterFrom}" />
-                  <TextBox Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterTo}" />
-                  <ComboBox Grid.Column="2" MinWidth="120" ItemsSource="{Binding ReportsModule.FilterTypeOptions}" SelectedItem="{Binding ReportsModule.SelectedFilterType}" />
-                  <Button Grid.Column="3" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
-                  <Button Grid.Column="4" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
-                  <Button Grid.Column="5" Padding="14,8" Click="OnExportReportCsvClick" Content="Exportar CSV" IsEnabled="{Binding ReportsModule.CanExportCsv}" />
-                </Grid>
+          <Grid Margin="4" RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" RowSpacing="16">
+            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
+              <StackPanel Spacing="4" VerticalAlignment="Center">
+                <TextBlock FontSize="21" FontWeight="SemiBold" Text="Relatórios financeiros" />
+                <TextBlock Opacity="0.74" Text="Resumo consolidado, comparativo e breakdowns do período selecionado." />
               </StackPanel>
+              <Border Grid.Column="1" Padding="12,8" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#151d26" VerticalAlignment="Center">
+                <TextBlock FontWeight="SemiBold" Text="{Binding ReportsModule.Summary}" />
+              </Border>
+            </Grid>
+
+            <Border Grid.Row="1" Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#121a22">
+              <Grid RowDefinitions="Auto,Auto" RowSpacing="10">
+                <TextBlock FontSize="14" FontWeight="SemiBold" Text="Filtros do relatório" />
+                <Grid Grid.Row="1" RowDefinitions="Auto,Auto" ColumnDefinitions="*,*,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+                  <TextBlock Opacity="0.78" FontSize="12" Text="Data inicial" />
+                  <TextBlock Grid.Column="1" Opacity="0.78" FontSize="12" Text="Data final" />
+                  <TextBlock Grid.Column="2" Opacity="0.78" FontSize="12" Text="Tipo" />
+
+                  <TextBox Grid.Row="1" Watermark="De (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterFrom}" />
+                  <TextBox Grid.Row="1" Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterTo}" />
+                  <ComboBox Grid.Row="1" Grid.Column="2" MinWidth="130" ItemsSource="{Binding ReportsModule.FilterTypeOptions}" SelectedItem="{Binding ReportsModule.SelectedFilterType}" />
+                  <Button Grid.Row="1" Grid.Column="3" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
+                  <Button Grid.Row="1" Grid.Column="4" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
+                  <Button Grid.Row="1" Grid.Column="5" Padding="14,8" Click="OnExportReportCsvClick" Content="Exportar CSV" IsEnabled="{Binding ReportsModule.CanExportCsv}" />
+                </Grid>
+              </Grid>
             </Border>
 
-            <Border Grid.Row="2" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-              <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="10">
+            <Border Grid.Row="2" Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#111821">
+              <Grid RowDefinitions="Auto,Auto,Auto" RowSpacing="12">
                 <TextBlock FontSize="14" FontWeight="SemiBold" Text="Resumo do período selecionado" />
-                <TextBlock Grid.Row="1" Opacity="0.72" Text="{Binding ReportsModule.PeriodDisplay}" />
+                <Border Grid.Row="1" Padding="10,8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
+                  <TextBlock Opacity="0.86" Text="{Binding ReportsModule.PeriodDisplay}" />
+                </Border>
 
                 <Grid Grid.Row="2" ColumnDefinitions="*,*,*" ColumnSpacing="12">
-                  <Border Padding="14" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10">
+                  <Border Padding="14" BorderBrush="#2f6147" BorderThickness="1" CornerRadius="10" Background="#182920">
                     <StackPanel Spacing="4">
-                      <TextBlock FontSize="13" Opacity="0.72" Text="Receitas no período" />
-                      <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ReportsModule.TotalRevenueDisplay}" />
+                      <TextBlock FontSize="13" Opacity="0.8" Text="Receitas no período" />
+                      <TextBlock FontSize="25" FontWeight="Bold" Text="{Binding ReportsModule.TotalRevenueDisplay}" />
                     </StackPanel>
                   </Border>
 
-                  <Border Grid.Column="1" Padding="14" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10">
+                  <Border Grid.Column="1" Padding="14" BorderBrush="#6a3a3f" BorderThickness="1" CornerRadius="10" Background="#2a1b1d">
                     <StackPanel Spacing="4">
-                      <TextBlock FontSize="13" Opacity="0.72" Text="Despesas no período" />
-                      <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ReportsModule.TotalExpenseDisplay}" />
+                      <TextBlock FontSize="13" Opacity="0.8" Text="Despesas no período" />
+                      <TextBlock FontSize="25" FontWeight="Bold" Text="{Binding ReportsModule.TotalExpenseDisplay}" />
                     </StackPanel>
                   </Border>
 
-                  <Border Grid.Column="2" Padding="14" BorderBrush="#24303a" BorderThickness="1" CornerRadius="10">
+                  <Border Grid.Column="2" Padding="14" BorderBrush="#30506a" BorderThickness="1" CornerRadius="10" Background="#182632">
                     <StackPanel Spacing="4">
-                      <TextBlock FontSize="13" Opacity="0.72" Text="Saldo no período" />
-                      <TextBlock FontSize="24" FontWeight="Bold" Text="{Binding ReportsModule.NetBalanceDisplay}" />
+                      <TextBlock FontSize="13" Opacity="0.8" Text="Saldo no período" />
+                      <TextBlock FontSize="25" FontWeight="Bold" Text="{Binding ReportsModule.NetBalanceDisplay}" />
                     </StackPanel>
                   </Border>
                 </Grid>
               </Grid>
             </Border>
 
-            <Border Grid.Row="3" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-              <StackPanel Spacing="8">
+            <Border Grid.Row="3" Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#121821">
+              <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
                 <TextBlock FontSize="14" FontWeight="SemiBold" Text="Comparativo com período anterior" />
-                <TextBlock FontSize="12" Opacity="0.72" Text="Regra: período anterior imediato com a mesma duração do período selecionado." TextWrapping="Wrap" />
-                <TextBlock FontSize="12" Opacity="0.72" Text="Indicadores: ▲ alta | ▼ queda | ■ estável/indisponível." TextWrapping="Wrap" />
-                <TextBlock Opacity="0.72" Text="{Binding ReportsModule.PeriodComparisonDisplay}" TextWrapping="Wrap" />
 
-                <Border Padding="8,6" BorderBrush="#24303a" BorderThickness="1" CornerRadius="8">
-                  <TextBlock Text="{Binding ReportsModule.RevenueComparisonDisplay}" TextWrapping="Wrap" />
+                <StackPanel Grid.Row="1" Spacing="3">
+                  <TextBlock FontSize="12" Opacity="0.74" Text="Regra: período anterior imediato com a mesma duração do período selecionado." TextWrapping="Wrap" />
+                  <TextBlock FontSize="12" Opacity="0.74" Text="Indicadores: ▲ alta | ▼ queda | ■ estável/indisponível." TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Border Grid.Row="2" Padding="10,8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
+                  <TextBlock Opacity="0.84" Text="{Binding ReportsModule.PeriodComparisonDisplay}" TextWrapping="Wrap" />
                 </Border>
-                <Border Padding="8,6" BorderBrush="#24303a" BorderThickness="1" CornerRadius="8">
-                  <TextBlock Text="{Binding ReportsModule.ExpenseComparisonDisplay}" TextWrapping="Wrap" />
-                </Border>
-                <Border Padding="8,6" BorderBrush="#24303a" BorderThickness="1" CornerRadius="8">
-                  <TextBlock Text="{Binding ReportsModule.NetBalanceComparisonDisplay}" TextWrapping="Wrap" />
-                </Border>
-              </StackPanel>
+
+                <Grid Grid.Row="3" RowDefinitions="Auto,Auto,Auto" RowSpacing="8">
+                  <Border Padding="10,8" BorderBrush="#2d3a48" BorderThickness="1" CornerRadius="8" Background="#141c25">
+                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                      <TextBlock FontWeight="SemiBold" Text="Receita" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding ReportsModule.RevenueComparisonDisplay}" TextWrapping="Wrap" />
+                    </Grid>
+                  </Border>
+
+                  <Border Grid.Row="1" Padding="10,8" BorderBrush="#2d3a48" BorderThickness="1" CornerRadius="8" Background="#141c25">
+                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                      <TextBlock FontWeight="SemiBold" Text="Despesa" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding ReportsModule.ExpenseComparisonDisplay}" TextWrapping="Wrap" />
+                    </Grid>
+                  </Border>
+
+                  <Border Grid.Row="2" Padding="10,8" BorderBrush="#2d3a48" BorderThickness="1" CornerRadius="8" Background="#141c25">
+                    <Grid ColumnDefinitions="110,*" ColumnSpacing="12">
+                      <TextBlock FontWeight="SemiBold" Text="Saldo" VerticalAlignment="Center" />
+                      <TextBlock Grid.Column="1" Text="{Binding ReportsModule.NetBalanceComparisonDisplay}" TextWrapping="Wrap" />
+                    </Grid>
+                  </Border>
+                </Grid>
+              </Grid>
             </Border>
 
-            <Border Grid.Row="4" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+            <Border Grid.Row="4" Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#111821">
+              <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                 <TextBlock FontSize="14" FontWeight="SemiBold" Text="Breakdown mensal" />
-                <Grid Grid.Row="1" ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12" Margin="0,0,0,4">
-                  <TextBlock FontWeight="SemiBold" Opacity="0.72" Text="Mês" />
-                  <TextBlock Grid.Column="1" FontWeight="SemiBold" Opacity="0.72" Text="Receitas" />
-                  <TextBlock Grid.Column="2" FontWeight="SemiBold" Opacity="0.72" Text="Despesas" />
-                  <TextBlock Grid.Column="3" FontWeight="SemiBold" Opacity="0.72" Text="Saldo" />
-                </Grid>
+
+                <Border Grid.Row="1" Padding="10,7" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
+                  <Grid ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
+                    <TextBlock FontWeight="SemiBold" Opacity="0.8" Text="Mês" />
+                    <TextBlock Grid.Column="1" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Receitas" />
+                    <TextBlock Grid.Column="2" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Despesas" />
+                    <TextBlock Grid.Column="3" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Saldo" />
+                  </Grid>
+                </Border>
+
                 <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByMonth}">
                   <ListBox.ItemTemplate>
                     <DataTemplate x:DataType="vm:FinancialReportMonthlyBreakdownItemViewModel">
-                      <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="Auto,Auto,Auto,Auto" ColumnSpacing="12">
+                      <Border Padding="11,9" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
                           <TextBlock FontWeight="SemiBold" Text="{Binding MonthDisplay}" />
-                          <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
-                          <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
-                          <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
+                          <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{Binding TotalRevenueDisplay}" />
+                          <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding TotalExpenseDisplay}" />
+                          <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding NetBalanceDisplay}" />
                         </Grid>
                       </Border>
                     </DataTemplate>
@@ -401,24 +435,28 @@
             </Border>
 
             <Grid Grid.Row="5" ColumnDefinitions="*,*" ColumnSpacing="16">
-              <Border Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+              <Border Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#111821">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                   <TextBlock FontSize="14" FontWeight="SemiBold" Text="Breakdown por cliente" />
-                  <Grid Grid.Row="1" ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,4">
-                    <TextBlock FontWeight="SemiBold" Opacity="0.72" Text="Cliente" />
-                    <TextBlock Grid.Column="1" FontWeight="SemiBold" Opacity="0.72" Text="Receitas" />
-                    <TextBlock Grid.Column="2" FontWeight="SemiBold" Opacity="0.72" Text="Despesas" />
-                    <TextBlock Grid.Column="3" FontWeight="SemiBold" Opacity="0.72" Text="Saldo" />
-                  </Grid>
+
+                  <Border Grid.Row="1" Padding="10,7" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
+                    <Grid ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
+                      <TextBlock FontWeight="SemiBold" Opacity="0.8" Text="Cliente" />
+                      <TextBlock Grid.Column="1" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Receitas" />
+                      <TextBlock Grid.Column="2" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Despesas" />
+                      <TextBlock Grid.Column="3" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Saldo" />
+                    </Grid>
+                  </Border>
+
                   <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByCustomer}">
                     <ListBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:FinancialReportBreakdownItemViewModel">
-                        <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
-                          <Grid ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Border Padding="11,9" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                          <Grid ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
                             <TextBlock FontWeight="SemiBold" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
-                            <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
-                            <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{Binding TotalRevenueDisplay}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding TotalExpenseDisplay}" />
+                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding NetBalanceDisplay}" />
                           </Grid>
                         </Border>
                       </DataTemplate>
@@ -427,25 +465,29 @@
                 </Grid>
               </Border>
 
-              <Border Grid.Column="1" Padding="12" BorderBrush="#30363d" BorderThickness="1" CornerRadius="10">
-                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="8">
+              <Border Grid.Column="1" Padding="14" BorderBrush="#3b4652" BorderThickness="1" CornerRadius="10" Background="#111821">
+                <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10">
                   <TextBlock FontSize="14" FontWeight="SemiBold" Text="Breakdown por produto/serviço" />
-                  <Grid Grid.Row="1" ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8" Margin="0,0,0,4">
-                    <TextBlock FontWeight="SemiBold" Opacity="0.72" Text="Produto/Serviço" />
-                    <TextBlock Grid.Column="1" FontWeight="SemiBold" Opacity="0.72" Text="Receitas" />
-                    <TextBlock Grid.Column="2" FontWeight="SemiBold" Opacity="0.72" Text="Despesas" />
-                    <TextBlock Grid.Column="3" FontWeight="SemiBold" Opacity="0.72" Text="Saldo" />
-                  </Grid>
+
+                  <Border Grid.Row="1" Padding="10,7" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
+                    <Grid ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
+                      <TextBlock FontWeight="SemiBold" Opacity="0.8" Text="Produto/Serviço" />
+                      <TextBlock Grid.Column="1" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Receitas" />
+                      <TextBlock Grid.Column="2" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Despesas" />
+                      <TextBlock Grid.Column="3" FontWeight="SemiBold" HorizontalAlignment="Right" Opacity="0.8" Text="Saldo" />
+                    </Grid>
+                  </Border>
+
                   <ListBox Grid.Row="2" BorderThickness="0" Background="Transparent" ItemsSource="{Binding ReportsModule.BreakdownByProductService}">
                     <ListBox.ItemTemplate>
                       <DataTemplate x:DataType="vm:FinancialReportBreakdownItemViewModel">
-                        <Border Padding="10,8" BorderBrush="#24303a" BorderThickness="0,0,0,1">
-                          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="2*,Auto,Auto,Auto" ColumnSpacing="8">
+                        <Border Padding="11,9" BorderBrush="#24303a" BorderThickness="0,0,0,1">
+                          <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="2*,1.2*,1.2*,1.2*" ColumnSpacing="10">
                             <TextBlock FontWeight="SemiBold" Text="{Binding Label}" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Text="{Binding TotalRevenueDisplay}" />
-                            <TextBlock Grid.Column="2" Text="{Binding TotalExpenseDisplay}" />
-                            <TextBlock Grid.Column="3" Text="{Binding NetBalanceDisplay}" />
-                            <TextBlock Grid.Row="1" Grid.ColumnSpan="4" FontSize="12" Opacity="0.72" Text="{Binding CategoryDisplay}" />
+                            <TextBlock Grid.Column="1" HorizontalAlignment="Right" Text="{Binding TotalRevenueDisplay}" />
+                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" Text="{Binding TotalExpenseDisplay}" />
+                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Text="{Binding NetBalanceDisplay}" />
+                            <TextBlock Grid.Row="1" FontSize="12" Opacity="0.72" Text="{Binding CategoryDisplay}" TextTrimming="CharacterEllipsis" />
                           </Grid>
                         </Border>
                       </DataTemplate>
