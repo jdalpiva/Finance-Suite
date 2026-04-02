@@ -9,6 +9,126 @@
     MinWidth="980"
     MinHeight="620"
     Title="SME Finance Suite">
+  <Window.Styles>
+    <Style Selector="TabItem">
+      <Setter Property="Padding" Value="14,8" />
+      <Setter Property="Margin" Value="0,0,6,0" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#2d3b4a" />
+      <Setter Property="Background" Value="#111821" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="TabItem:pointerover">
+      <Setter Property="Background" Value="#17222f" />
+      <Setter Property="BorderBrush" Value="#41556b" />
+    </Style>
+
+    <Style Selector="TabItem:selected">
+      <Setter Property="Background" Value="#1e2f42" />
+      <Setter Property="BorderBrush" Value="#678eb5" />
+    </Style>
+
+    <Style Selector="TextBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#415163" />
+      <Setter Property="Background" Value="#0f1620" />
+    </Style>
+
+    <Style Selector="TextBox:pointerover">
+      <Setter Property="BorderBrush" Value="#5f758d" />
+    </Style>
+
+    <Style Selector="TextBox:focus">
+      <Setter Property="BorderBrush" Value="#7aa6d1" />
+      <Setter Property="Background" Value="#132131" />
+    </Style>
+
+    <Style Selector="ComboBox">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#415163" />
+      <Setter Property="Background" Value="#0f1620" />
+    </Style>
+
+    <Style Selector="ComboBox:pointerover">
+      <Setter Property="BorderBrush" Value="#5f758d" />
+    </Style>
+
+    <Style Selector="ComboBox:focus">
+      <Setter Property="BorderBrush" Value="#7aa6d1" />
+      <Setter Property="Background" Value="#132131" />
+    </Style>
+
+    <Style Selector="ListBoxItem">
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="Margin" Value="0,0,0,2" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <Style Selector="ListBoxItem:pointerover">
+      <Setter Property="Background" Value="#172431" />
+      <Setter Property="BorderBrush" Value="#3d5268" />
+    </Style>
+
+    <Style Selector="ListBoxItem:selected">
+      <Setter Property="Background" Value="#21384d" />
+      <Setter Property="BorderBrush" Value="#5c83ab" />
+    </Style>
+
+    <Style Selector="ListBoxItem:selected:pointerover">
+      <Setter Property="Background" Value="#29445f" />
+      <Setter Property="BorderBrush" Value="#7aa6d1" />
+    </Style>
+
+    <Style Selector="Button">
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="BorderBrush" Value="#5a6775" />
+      <Setter Property="Background" Value="#223142" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Button:pointerover">
+      <Setter Property="Background" Value="#2b3d51" />
+      <Setter Property="BorderBrush" Value="#76879a" />
+    </Style>
+
+    <Style Selector="Button:disabled">
+      <Setter Property="Opacity" Value="0.6" />
+    </Style>
+
+    <Style Selector="Button.primary-action">
+      <Setter Property="Background" Value="#20482f" />
+      <Setter Property="BorderBrush" Value="#3f7a53" />
+    </Style>
+
+    <Style Selector="Button.primary-action:pointerover">
+      <Setter Property="Background" Value="#285b3b" />
+      <Setter Property="BorderBrush" Value="#5aa071" />
+    </Style>
+
+    <Style Selector="Button.secondary-action">
+      <Setter Property="Background" Value="#223142" />
+      <Setter Property="BorderBrush" Value="#5a6775" />
+    </Style>
+
+    <Style Selector="Button.secondary-action:pointerover">
+      <Setter Property="Background" Value="#2f4359" />
+      <Setter Property="BorderBrush" Value="#7f96ad" />
+    </Style>
+
+    <Style Selector="Button.destructive-action">
+      <Setter Property="Background" Value="#4a1f24" />
+      <Setter Property="BorderBrush" Value="#8f424b" />
+    </Style>
+
+    <Style Selector="Button.destructive-action:pointerover">
+      <Setter Property="Background" Value="#5f272f" />
+      <Setter Property="BorderBrush" Value="#b35a66" />
+    </Style>
+  </Window.Styles>
+
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
@@ -73,8 +193,8 @@
                       <TextBox Grid.Row="1" Watermark="De (yyyy-MM-dd)" Text="{Binding FinancialEntriesModule.FilterFrom}" />
                       <TextBox Grid.Row="1" Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding FinancialEntriesModule.FilterTo}" />
                       <ComboBox Grid.Row="1" Grid.Column="2" MinWidth="120" ItemsSource="{Binding FinancialEntriesModule.FilterTypeOptions}" SelectedItem="{Binding FinancialEntriesModule.SelectedFilterType}" />
-                      <Button Grid.Row="1" Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding FinancialEntriesModule.CanApplyFilters}" />
-                      <Button Grid.Row="1" Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding FinancialEntriesModule.CanClearFilters}" />
+                      <Button Classes="primary-action" Grid.Row="1" Grid.Column="3" Padding="14,8" Click="OnApplyFiltersClick" Content="Filtrar" IsEnabled="{Binding FinancialEntriesModule.CanApplyFilters}" />
+                      <Button Classes="secondary-action" Grid.Row="1" Grid.Column="4" Padding="14,8" Click="OnClearFiltersClick" Content="Limpar" IsEnabled="{Binding FinancialEntriesModule.CanClearFilters}" />
                     </Grid>
                   </Grid>
                 </Border>
@@ -178,13 +298,13 @@
                 </StackPanel>
 
                 <Border Grid.Row="6" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
-                  <Button Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding FinancialEntriesModule.CanRegister}" />
+                  <Button Classes="primary-action" Padding="14,10" Click="OnRegisterEntryClick" Content="Cadastrar lançamento" IsEnabled="{Binding FinancialEntriesModule.CanRegister}" />
                 </Border>
 
                 <Border Grid.Row="7" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
                   <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding FinancialEntriesModule.CanUpdateSelected}" />
-                    <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding FinancialEntriesModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding FinancialEntriesModule.CanDeleteSelected}" />
+                    <Button Classes="secondary-action" Padding="14,10" Click="OnUpdateSelectedEntryClick" Content="Atualizar selecionado" IsEnabled="{Binding FinancialEntriesModule.CanUpdateSelected}" />
+                    <Button Classes="destructive-action" Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedEntryClick" Content="{Binding FinancialEntriesModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding FinancialEntriesModule.CanDeleteSelected}" />
                   </Grid>
                 </Border>
 
@@ -265,7 +385,7 @@
                 </StackPanel>
 
                 <Border Grid.Row="4" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
-                  <Button Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CustomersModule.CanRegister}" />
+                  <Button Classes="primary-action" Padding="14,10" Click="OnRegisterCustomerClick" Content="Cadastrar cliente" IsEnabled="{Binding CustomersModule.CanRegister}" />
                 </Border>
 
                 <Border Grid.Row="5" IsVisible="{Binding CustomersModule.IsDeleteConfirmationPending}" Padding="10,8" BorderBrush="#6a3a3f" BorderThickness="1" CornerRadius="8" Background="#2a1b1d">
@@ -274,8 +394,8 @@
 
                 <Border Grid.Row="6" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b" VerticalAlignment="Top">
                   <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CustomersModule.CanUpdateSelected}" />
-                    <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding CustomersModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding CustomersModule.CanDeleteSelected}" />
+                    <Button Classes="secondary-action" Padding="14,10" Click="OnUpdateSelectedCustomerClick" Content="Atualizar selecionado" IsEnabled="{Binding CustomersModule.CanUpdateSelected}" />
+                    <Button Classes="destructive-action" Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedCustomerClick" Content="{Binding CustomersModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding CustomersModule.CanDeleteSelected}" />
                   </Grid>
                 </Border>
               </Grid>
@@ -368,11 +488,11 @@
                 </Border>
 
                 <Border Grid.Row="5" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
-                  <Button Padding="14,10" Click="OnRegisterProductServiceClick" Content="Cadastrar item" IsEnabled="{Binding ProductCatalogModule.CanRegister}" />
+                  <Button Classes="primary-action" Padding="14,10" Click="OnRegisterProductServiceClick" Content="Cadastrar item" IsEnabled="{Binding ProductCatalogModule.CanRegister}" />
                 </Border>
 
                 <Border Grid.Row="6" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b">
-                  <Button Padding="14,10" Click="OnToggleSelectedProductServiceActiveClick" Content="{Binding ProductCatalogModule.ToggleSelectedActiveButtonLabel}" IsEnabled="{Binding ProductCatalogModule.CanToggleSelectedActive}" />
+                  <Button Classes="secondary-action" Padding="14,10" Click="OnToggleSelectedProductServiceActiveClick" Content="{Binding ProductCatalogModule.ToggleSelectedActiveButtonLabel}" IsEnabled="{Binding ProductCatalogModule.CanToggleSelectedActive}" />
                 </Border>
 
                 <Border Grid.Row="7" IsVisible="{Binding ProductCatalogModule.IsDeleteConfirmationPending}" Padding="10,8" BorderBrush="#6a3a3f" BorderThickness="1" CornerRadius="8" Background="#2a1b1d">
@@ -381,8 +501,8 @@
 
                 <Border Grid.Row="8" Padding="8" BorderBrush="#2a3542" BorderThickness="1" CornerRadius="8" Background="#15202b" VerticalAlignment="Top">
                   <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-                    <Button Padding="14,10" Click="OnUpdateSelectedProductServiceClick" Content="Atualizar selecionado" IsEnabled="{Binding ProductCatalogModule.CanUpdateSelected}" />
-                    <Button Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedProductServiceClick" Content="{Binding ProductCatalogModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding ProductCatalogModule.CanDeleteSelected}" />
+                    <Button Classes="secondary-action" Padding="14,10" Click="OnUpdateSelectedProductServiceClick" Content="Atualizar selecionado" IsEnabled="{Binding ProductCatalogModule.CanUpdateSelected}" />
+                    <Button Classes="destructive-action" Grid.Column="1" Padding="14,10" Click="OnDeleteSelectedProductServiceClick" Content="{Binding ProductCatalogModule.DeleteSelectedButtonLabel}" IsEnabled="{Binding ProductCatalogModule.CanDeleteSelected}" />
                   </Grid>
                 </Border>
               </Grid>
@@ -413,9 +533,9 @@
                   <TextBox Grid.Row="1" Watermark="De (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterFrom}" />
                   <TextBox Grid.Row="1" Grid.Column="1" Watermark="Até (yyyy-MM-dd)" Text="{Binding ReportsModule.FilterTo}" />
                   <ComboBox Grid.Row="1" Grid.Column="2" MinWidth="130" ItemsSource="{Binding ReportsModule.FilterTypeOptions}" SelectedItem="{Binding ReportsModule.SelectedFilterType}" />
-                  <Button Grid.Row="1" Grid.Column="3" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
-                  <Button Grid.Row="1" Grid.Column="4" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
-                  <Button Grid.Row="1" Grid.Column="5" Padding="14,8" Click="OnExportReportCsvClick" Content="Exportar CSV" IsEnabled="{Binding ReportsModule.CanExportCsv}" />
+                  <Button Classes="primary-action" Grid.Row="1" Grid.Column="3" Padding="14,8" Click="OnApplyReportFiltersClick" Content="Aplicar período" IsEnabled="{Binding ReportsModule.CanApplyFilters}" />
+                  <Button Classes="secondary-action" Grid.Row="1" Grid.Column="4" Padding="14,8" Click="OnClearReportFiltersClick" Content="Limpar" IsEnabled="{Binding ReportsModule.CanClearFilters}" />
+                  <Button Classes="secondary-action" Grid.Row="1" Grid.Column="5" Padding="14,8" Click="OnExportReportCsvClick" Content="Exportar CSV" IsEnabled="{Binding ReportsModule.CanExportCsv}" />
                 </Grid>
               </Grid>
             </Border>
