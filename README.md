@@ -77,6 +77,26 @@ dotnet build SMEFinanceSuite.sln --no-restore
 dotnet run --project src/App.Desktop/App.Desktop.csproj
 ```
 
+## Como gerar artefato de release desktop
+
+O alvo principal pragmático atual e `linux-x64`, que tambem corresponde ao ambiente validado localmente para esta etapa de release.
+
+Fluxo recomendado para gerar um diretório distribuível:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 --disable-parallel -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+```
+
+Saída esperada:
+
+- diretório final em `artifacts/desktop/linux-x64`
+- executável em `artifacts/desktop/linux-x64/App.Desktop`
+- `appsettings.json` copiado junto do executável
+- bibliotecas nativas e dependências do Avalonia presentes no mesmo diretório
+
+Esse fluxo usa `restore + build` por RID para produzir o layout de distribuição validado na sprint atual.
+
 ## Validação manual rápida
 
 Checklist curto para smoke test local:
@@ -87,6 +107,8 @@ Checklist curto para smoke test local:
 4. Cadastrar um lançamento vinculado aos cadastros criados.
 5. Editar e excluir registros, observando a confirmação em duas etapas nas ações destrutivas.
 6. Abrir a aba de relatórios, aplicar filtros e exportar CSV.
+
+Para validação de release, repita esse checklist usando o executável gerado em `artifacts/desktop/linux-x64`.
 
 ## Banco de dados
 

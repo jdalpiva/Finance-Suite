@@ -78,3 +78,40 @@ Motivo da escolha:
 - Mudança pequena, sem impacto no código de produção.
 - Aumenta previsibilidade da suíte imediatamente.
 - Evita abrir escopo de refatoração ampla de fixtures/infra sem evidência de necessidade.
+
+## Release desktop pragmático (Sprint 26 - 2026-04-02)
+
+Objetivo adotado:
+
+- preparar um artefato desktop distribuível sem abrir pipeline complexa nem empacotamento multi-plataforma nesta etapa.
+
+Decisão pragmática:
+
+- alvo principal atual: `linux-x64`
+- distribuição inicial: diretório executável gerado por RID-specific build
+- motivo: o layout resultante ja inclui `App.Desktop`, `runtimeconfig`, `deps`, `appsettings.json` e dependências nativas necessárias
+
+Comando recomendado:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 --disable-parallel -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+```
+
+Saída:
+
+- `artifacts/desktop/linux-x64`
+
+Validação executada na sprint:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+```
+
+Observação importante:
+
+- `dotnet publish` puro apresentou falha opaca no target de restore neste ambiente, sem mensagem diagnóstica útil.
+- Como mitigação de baixo risco, o fluxo oficial desta sprint ficou padronizado em comandos diretos de `restore + build -r linux-x64`.
+- O resultado continua adequado para distribuição local e validação manual do desktop app.
