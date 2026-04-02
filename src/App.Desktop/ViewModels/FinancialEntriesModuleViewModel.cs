@@ -38,7 +38,9 @@ public sealed class FinancialEntriesModuleViewModel : INotifyPropertyChanged
 
     public IReadOnlyList<string> FilterTypeOptions { get; } = ["Todos", "Receita", "Despesa"];
 
-    public string EntriesSummary => $"{FinancialEntries.Count} lançamentos";
+    public string EntriesSummary => FinancialEntries.Count == 0
+        ? "Nenhum lançamento encontrado"
+        : $"{FinancialEntries.Count} lançamentos";
 
     public bool IsBusy
     {

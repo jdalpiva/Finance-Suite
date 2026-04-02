@@ -81,15 +81,59 @@ public sealed class ProductCatalogModuleViewModelTests
         Assert.Equal(2, service.UpdateCalls);
     }
 
+    [Fact]
+    public async Task RegisterAsync_ShouldClearSelectionInsteadOfRestoringPreviousItem()
+    {
+        CancellationToken cancellationToken = TestContext.Current.CancellationToken;
+
+        var existingId = Guid.NewGuid();
+        var service = new FakeProductCatalogService(
+            [
+                new ProductServiceListItemDto(
+                    Id: existingId,
+                    Name: "Item Existente",
+                    Category: "Serviços",
+                    UnitPrice: 300m,
+                    IsService: true,
+                    IsActive: true)
+            ]);
+
+        var viewModel = new ProductCatalogModuleViewModel(service);
+        await viewModel.LoadAsync(cancellationToken);
+        viewModel.SelectedProductService = Assert.Single(viewModel.ProductServices);
+
+        viewModel.Form.Name = "Novo Item";
+        viewModel.Form.Category = "Serviços";
+        viewModel.Form.UnitPrice = "450,00";
+        viewModel.Form.SelectedKind = "Serviço";
+        viewModel.Form.IsActive = true;
+
+        await viewModel.RegisterAsync(cancellationToken);
+
+        Assert.Null(viewModel.SelectedProductService);
+        Assert.Equal(string.Empty, viewModel.Form.Name);
+        Assert.Equal(2, viewModel.ProductServices.Count);
+    }
+
     private sealed class FakeProductCatalogService(List<ProductServiceListItemDto> seedItems) : IProductCatalogService
     {
         private readonly List<ProductServiceListItemDto> _items = seedItems;
 
         public int UpdateCalls { get; private set; }
+        public int RegisterCalls { get; private set; }
 
         public Task<Guid> RegisterAsync(CreateProductServiceCommand command, CancellationToken cancellationToken = default)
         {
-            throw new NotSupportedException();
+            Guid newId = Guid.NewGuid();
+            _items.Add(new ProductServiceListItemDto(
+                Id: newId,
+                Name: command.Name,
+                Category: command.Category,
+                UnitPrice: command.UnitPrice,
+                IsService: command.IsService,
+                IsActive: command.IsActive));
+            RegisterCalls++;
+            return Task.FromResult(newId);
         }
 
         public Task UpdateAsync(UpdateProductServiceCommand command, CancellationToken cancellationToken = default)

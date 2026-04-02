@@ -27,7 +27,9 @@ public sealed class CustomersModuleViewModel : INotifyPropertyChanged
         Customers.CollectionChanged += OnCustomersChanged;
     }
 
-    public string Summary => $"{Customers.Count} clientes cadastrados";
+    public string Summary => Customers.Count == 0
+        ? "Nenhum cliente cadastrado"
+        : $"{Customers.Count} clientes cadastrados";
 
     public bool IsBusy
     {

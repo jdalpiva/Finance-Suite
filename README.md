@@ -9,11 +9,17 @@ Solução inicial real, desktop-first, para substituir planilhas por um sistema 
 - **Entity Framework Core + SQLite** para persistência local-first.
 - **xUnit v3** para testes.
 
-## Status das sprints
+## Status atual
 
-- **Sprint 1 (concluída)**: vertical slice de lançamentos financeiros com **Register + List**.
-- **Fora de escopo da Sprint 1**: **Update** e **Delete** de lançamentos.
-- **Sprint 2 (iniciada)**: evolução da UI de lançamentos (listagem, cadastro e filtros por período) integrada ao `IFinancialEntryService`.
+O app já cobre o fluxo principal desktop com:
+
+- lançamentos financeiros com cadastro, edição, exclusão e filtros
+- clientes
+- produtos/serviços com status ativo/inativo
+- relatórios com filtros, breakdowns, comparativo entre períodos e exportação CSV
+- persistência local via SQLite
+
+O foco atual do repositório esta em prontidão prática para uso real e pré-release leve, sem abrir novos módulos grandes.
 
 ## Estrutura
 
@@ -57,11 +63,30 @@ dotnet test tests/Unit/Unit.csproj -m:1 --disable-build-servers
 dotnet test tests/Integration/Integration.csproj -m:1 --disable-build-servers
 ```
 
+Se quiser validar rapidamente antes de rodar o desktop, este é o caminho operacional recomendado:
+
+```bash
+dotnet restore SMEFinanceSuite.sln
+dotnet build SMEFinanceSuite.sln --no-restore
+./scripts/test-stable.sh
+```
+
 ## Como executar o desktop
 
 ```bash
 dotnet run --project src/App.Desktop/App.Desktop.csproj
 ```
+
+## Validação manual rápida
+
+Checklist curto para smoke test local:
+
+1. Abrir o app e confirmar carregamento sem erro na mensagem de status.
+2. Cadastrar um cliente.
+3. Cadastrar um produto/serviço.
+4. Cadastrar um lançamento vinculado aos cadastros criados.
+5. Editar e excluir registros, observando a confirmação em duas etapas nas ações destrutivas.
+6. Abrir a aba de relatórios, aplicar filtros e exportar CSV.
 
 ## Banco de dados
 
@@ -91,10 +116,8 @@ Criar uma nova migration:
 dotnet ef migrations add NomeDaMigration --project src/Core.Infrastructure --startup-project src/Core.Infrastructure
 ```
 
-## Próximos passos sugeridos
+## Notas operacionais
 
-1. Expandir o módulo de lançamentos com Update/Delete mantendo regras no domínio.
-2. Criar módulo de clientes.
-3. Criar módulo de produtos/serviços.
-4. Adicionar orçamento e ponto de equilíbrio.
-5. Expor a camada Application por uma API ASP.NET Core para iniciar a evolução para SaaS.
+- O app usa confirmações em duas etapas para exclusões nos módulos principais.
+- A exportação CSV fica disponível na aba `Relatórios`.
+- Quando o banco estiver vazio, o desktop continua inicializando normalmente e os módulos exibem estados vazios de forma explícita.

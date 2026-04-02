@@ -136,7 +136,11 @@ public sealed class ReportsModuleViewModel : INotifyPropertyChanged
         }
     }
 
-    public string Summary => $"{BreakdownByMonth.Count} meses • {BreakdownByCustomer.Count} clientes • {BreakdownByProductService.Count} itens";
+    public string Summary => BreakdownByMonth.Count == 0
+        && BreakdownByCustomer.Count == 0
+        && BreakdownByProductService.Count == 0
+            ? "Sem dados para o período selecionado"
+            : $"{BreakdownByMonth.Count} meses • {BreakdownByCustomer.Count} clientes • {BreakdownByProductService.Count} itens";
 
     public void SetBusy(bool isBusy)
     {

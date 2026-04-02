@@ -29,7 +29,9 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ProductServiceListItemViewModel> ActiveProductServices { get; } = [];
 
-    public string Summary => $"{ProductServices.Count} itens cadastrados";
+    public string Summary => ProductServices.Count == 0
+        ? "Nenhum item cadastrado"
+        : $"{ProductServices.Count} itens cadastrados";
 
     public bool IsBusy
     {
@@ -147,7 +149,9 @@ public sealed class ProductCatalogModuleViewModel : INotifyPropertyChanged
         CreateProductServiceCommand command = Form.BuildCreateCommand();
         await _productCatalogService.RegisterAsync(command, cancellationToken);
 
+        SelectedProductService = null;
         Form.Clear();
+        ResetDeleteConfirmation();
         await LoadAsync(cancellationToken);
     }
 

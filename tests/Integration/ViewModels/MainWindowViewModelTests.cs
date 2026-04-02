@@ -41,12 +41,14 @@ public sealed class MainWindowViewModelTests
 
         Assert.True(viewModel.CustomersModule.IsDeleteConfirmationPending);
         Assert.Equal("Confirmar exclusão", viewModel.CustomersModule.DeleteSelectedButtonLabel);
+        Assert.Contains("Cliente ViewModel", viewModel.StatusMessage);
         Assert.Equal(0, customerService.DeleteCalls);
 
         await viewModel.DeleteSelectedCustomerAsync(cancellationToken);
 
         Assert.False(viewModel.CustomersModule.IsDeleteConfirmationPending);
         Assert.Equal("Excluir selecionado", viewModel.CustomersModule.DeleteSelectedButtonLabel);
+        Assert.Contains("Cliente ViewModel", viewModel.StatusMessage);
         Assert.Equal(1, customerService.DeleteCalls);
         Assert.Empty(viewModel.CustomersModule.Customers);
     }
@@ -87,6 +89,8 @@ public sealed class MainWindowViewModelTests
         Assert.False(currentItem.IsActive);
         Assert.Empty(viewModel.ProductCatalogModule.ActiveProductServices);
         Assert.Null(viewModel.FinancialEntriesModule.Form.SelectedProductServiceId);
+        Assert.Contains("Plano Ativo", viewModel.StatusMessage);
+        Assert.Contains("inativado", viewModel.StatusMessage);
         Assert.Equal(1, productCatalogService.UpdateCalls);
     }
 

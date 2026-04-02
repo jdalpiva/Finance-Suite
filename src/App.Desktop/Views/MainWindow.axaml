@@ -199,7 +199,7 @@
   <Grid Margin="24" RowDefinitions="Auto,Auto,*" RowSpacing="16">
     <StackPanel Spacing="6">
       <TextBlock FontSize="28" FontWeight="SemiBold" Text="SME Finance Suite" />
-      <TextBlock Opacity="0.72" Text="Sprint 10: evolução de relatórios com granularidade temporal mensal." />
+      <TextBlock Opacity="0.72" Text="Pré-release leve: operação local com lançamentos, cadastros, relatórios e exportação CSV." />
       <TextBlock FontStyle="Italic" Opacity="0.72" Text="{Binding StatusMessage}" />
     </StackPanel>
 

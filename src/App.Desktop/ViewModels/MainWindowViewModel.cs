@@ -84,7 +84,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await ProductCatalogModule.LoadAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
 
-            StatusMessage = $"Dashboard e módulos carregados em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            StatusMessage = $"Aplicativo pronto para uso em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
@@ -258,6 +258,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        string? selectedDescription = FinancialEntriesModule.SelectedFinancialEntry?.Description;
         FinancialEntryDeleteRequest request = FinancialEntriesModule.RequestDeleteSelected();
 
         if (request.State == FinancialEntryDeleteRequestState.NoSelection)
@@ -268,7 +269,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (request.State == FinancialEntryDeleteRequestState.ConfirmationRequired)
         {
-            StatusMessage = "Confirme a exclusão clicando novamente no botão.";
+            StatusMessage = selectedDescription is null
+                ? "Confirme a exclusão clicando novamente no botão."
+                : $"Confirme a exclusão do lançamento \"{selectedDescription}\" clicando novamente no botão.";
             return;
         }
 
@@ -283,7 +286,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await LoadDashboardAsync(cancellationToken);
             await ReportsModule.LoadAsync(cancellationToken);
 
-            StatusMessage = $"Lançamento excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            StatusMessage = selectedDescription is null
+                ? $"Lançamento excluído em {DateTime.Now:dd/MM/yyyy HH:mm}."
+                : $"Lançamento \"{selectedDescription}\" excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
@@ -354,6 +359,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        string? selectedCustomerName = CustomersModule.SelectedCustomer?.Name;
         CustomerDeleteRequest request = CustomersModule.RequestDeleteSelected();
 
         if (request.State == CustomerDeleteRequestState.NoSelection)
@@ -364,7 +370,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (request.State == CustomerDeleteRequestState.ConfirmationRequired)
         {
-            StatusMessage = "Confirme a exclusão do cliente clicando novamente no botão.";
+            StatusMessage = selectedCustomerName is null
+                ? "Confirme a exclusão do cliente clicando novamente no botão."
+                : $"Confirme a exclusão do cliente \"{selectedCustomerName}\" clicando novamente no botão.";
             return;
         }
 
@@ -380,7 +388,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await LoadDashboardAsync(cancellationToken);
             await ReportsModule.LoadAsync(cancellationToken);
 
-            StatusMessage = $"Cliente excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            StatusMessage = selectedCustomerName is null
+                ? $"Cliente excluído em {DateTime.Now:dd/MM/yyyy HH:mm}."
+                : $"Cliente \"{selectedCustomerName}\" excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
@@ -452,6 +462,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        ProductServiceListItemViewModel selectedProductService = ProductCatalogModule.SelectedProductService;
+
         if (!TryBeginBusyOperation())
         {
             return;
@@ -462,8 +474,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await ProductCatalogModule.ToggleSelectedActiveAsync(cancellationToken);
             SyncFinancialEntriesFormReferences();
 
-            string statusLabel = ProductCatalogModule.SelectedProductService?.IsActive == true ? "ativado" : "inativado";
-            StatusMessage = $"Produto/serviço {statusLabel} em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            string statusLabel = selectedProductService.IsActive ? "inativado" : "ativado";
+            StatusMessage = $"Produto/serviço \"{selectedProductService.Name}\" {statusLabel} em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
@@ -482,6 +494,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        string? selectedProductServiceName = ProductCatalogModule.SelectedProductService?.Name;
         ProductDeleteRequest request = ProductCatalogModule.RequestDeleteSelected();
 
         if (request.State == ProductDeleteRequestState.NoSelection)
@@ -492,7 +505,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
 
         if (request.State == ProductDeleteRequestState.ConfirmationRequired)
         {
-            StatusMessage = "Confirme a exclusão do produto/serviço clicando novamente no botão.";
+            StatusMessage = selectedProductServiceName is null
+                ? "Confirme a exclusão do produto/serviço clicando novamente no botão."
+                : $"Confirme a exclusão do produto/serviço \"{selectedProductServiceName}\" clicando novamente no botão.";
             return;
         }
 
@@ -508,7 +523,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged
             await LoadDashboardAsync(cancellationToken);
             await ReportsModule.LoadAsync(cancellationToken);
 
-            StatusMessage = $"Produto/serviço excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
+            StatusMessage = selectedProductServiceName is null
+                ? $"Produto/serviço excluído em {DateTime.Now:dd/MM/yyyy HH:mm}."
+                : $"Produto/serviço \"{selectedProductServiceName}\" excluído em {DateTime.Now:dd/MM/yyyy HH:mm}.";
         }
         catch (Exception exception)
         {
