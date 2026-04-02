@@ -91,11 +91,17 @@ dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-res
 Saída esperada:
 
 - diretório final em `artifacts/desktop/linux-x64`
-- executável em `artifacts/desktop/linux-x64/App.Desktop`
+- executável em `artifacts/desktop/linux-x64/SMEFinanceSuite.Desktop`
 - `appsettings.json` copiado junto do executável
 - bibliotecas nativas e dependências do Avalonia presentes no mesmo diretório
 
 Esse fluxo usa `restore + build` por RID para produzir o layout de distribuição validado na sprint atual.
+
+Metadata básica de release aplicada nesta etapa:
+
+- nome do produto: `SME Finance Suite`
+- executável distribuível: `SMEFinanceSuite.Desktop`
+- versão inicial de release: `0.27.0`
 
 ## Validação manual rápida
 
@@ -109,6 +115,22 @@ Checklist curto para smoke test local:
 6. Abrir a aba de relatórios, aplicar filtros e exportar CSV.
 
 Para validação de release, repita esse checklist usando o executável gerado em `artifacts/desktop/linux-x64`.
+
+Guia curto para validar o artefato fora do workspace:
+
+```bash
+rm -rf /tmp/smefs-release-smoke
+mkdir -p /tmp/smefs-release-smoke
+cp -R artifacts/desktop/linux-x64 /tmp/smefs-release-smoke/app
+HOME=/tmp/smefs-release-smoke/home /tmp/smefs-release-smoke/app/SMEFinanceSuite.Desktop
+```
+
+Resultado esperado:
+
+- o artefato deve iniciar sem depender do workspace original
+- `appsettings.json` deve estar no mesmo diretório do executável
+- o banco SQLite relativo continua sendo resolvido para a pasta de dados do usuário
+- em Linux sem sessão gráfica, o app agora falha com mensagem amigável orientando o uso em ambiente desktop com `DISPLAY` configurado
 
 ## Banco de dados
 

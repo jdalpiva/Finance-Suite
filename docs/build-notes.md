@@ -89,7 +89,7 @@ Decisão pragmática:
 
 - alvo principal atual: `linux-x64`
 - distribuição inicial: diretório executável gerado por RID-specific build
-- motivo: o layout resultante ja inclui `App.Desktop`, `runtimeconfig`, `deps`, `appsettings.json` e dependências nativas necessárias
+- motivo: o layout resultante ja inclui `SMEFinanceSuite.Desktop`, `runtimeconfig`, `deps`, `appsettings.json` e dependências nativas necessárias
 
 Comando recomendado:
 
@@ -115,3 +115,35 @@ Observação importante:
 - `dotnet publish` puro apresentou falha opaca no target de restore neste ambiente, sem mensagem diagnóstica útil.
 - Como mitigação de baixo risco, o fluxo oficial desta sprint ficou padronizado em comandos diretos de `restore + build -r linux-x64`.
 - O resultado continua adequado para distribuição local e validação manual do desktop app.
+
+## Validação pragmática de release (Sprint 27 - 2026-04-02)
+
+Escopo validado:
+
+- artefato copiado para `/tmp/smefs-release-smoke/app`, fora do workspace de desenvolvimento
+- presença confirmada de executável ELF, `appsettings.json`, `runtimeconfig` e dependências nativas
+- identificação básica de release adicionada ao projeto desktop:
+  - `Product`: `SME Finance Suite`
+  - executável: `SMEFinanceSuite.Desktop`
+  - versão: `0.27.0`
+
+Comandos usados na validação:
+
+```bash
+file artifacts/desktop/linux-x64/SMEFinanceSuite.Desktop
+rm -rf /tmp/smefs-release-smoke
+mkdir -p /tmp/smefs-release-smoke
+cp -R artifacts/desktop/linux-x64 /tmp/smefs-release-smoke/app
+HOME=/tmp/smefs-release-smoke/home /tmp/smefs-release-smoke/app/SMEFinanceSuite.Desktop
+```
+
+Resultado observado:
+
+- o diretório publicado permanece executável fora do workspace original
+- a leitura de configuração continua viável porque `appsettings.json` segue junto do artefato
+- em ambiente Linux sem sessão gráfica, a tentativa de abrir a UI falha antes da janela carregar
+- a sprint tratou esse caso com mensagem amigável de startup, substituindo o stack trace cru anterior de `XOpenDisplay failed`
+
+Lacuna que permanece conhecida:
+
+- a abertura visual completa do app ainda precisa ser validada em uma sessão gráfica Linux real, fora do ambiente de desenvolvimento

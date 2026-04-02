@@ -4,6 +4,14 @@
     <UseCompiledBindingsByDefault>true</UseCompiledBindingsByDefault>
     <UseAppHost>true</UseAppHost>
     <RuntimeIdentifiers>linux-x64</RuntimeIdentifiers>
+    <AssemblyName>SMEFinanceSuite.Desktop</AssemblyName>
+    <RootNamespace>SMEFinanceSuite.App.Desktop</RootNamespace>
+    <Product>SME Finance Suite</Product>
+    <AssemblyTitle>SME Finance Suite Desktop</AssemblyTitle>
+    <Company>SMEFinanceSuite</Company>
+    <Version>0.27.0</Version>
+    <FileVersion>0.27.0.0</FileVersion>
+    <InformationalVersion>0.27.0</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>
