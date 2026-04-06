@@ -41,6 +41,7 @@ SMEFinanceSuite/
 
 1. SDK do .NET 10 instalado (o repositório está fixado por `global.json`).
 2. Sistema operacional Linux, Windows ou macOS com suporte ao .NET SDK.
+3. `dpkg-deb` instalado para gerar o pacote `.deb` da Sprint 30.
 
 Valide o SDK ativo:
 
@@ -101,7 +102,40 @@ Metadata básica de release aplicada nesta etapa:
 
 - nome do produto: `SME Finance Suite`
 - executável distribuível: `SMEFinanceSuite.Desktop`
-- versão inicial de release: `0.27.0`
+- versão atual de release: `0.30.0`
+
+## Como gerar pacote .deb
+
+A forma pragmática adotada na Sprint 30 foi empacotar exatamente o release desktop `linux-x64` ja validado, sem trocar a arquitetura do produto nem abrir pipeline complexa.
+
+Layout do pacote:
+
+- pacote Debian: `sme-finance-suite`
+- versão: derivada de `src/App.Desktop/App.Desktop.csproj`
+- diretório instalado do app: `/opt/sme-finance-suite`
+- launcher no PATH: `/usr/bin/sme-finance-suite`
+- desktop entry: `/usr/share/applications/sme-finance-suite.desktop`
+- icone dedicado: fora do escopo desta sprint
+
+Comando recomendado:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 --disable-parallel -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+./scripts/package-deb.sh
+```
+
+Saída esperada:
+
+- pacote em `artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`
+- staging temporário em `artifacts/deb/staging/`
+
+Observações importantes:
+
+- o script empacota o artefato ja gerado em `artifacts/desktop/linux-x64`
+- separar build e empacotamento reduz risco operacional e mantém o fluxo alinhado ao release `linux-x64` ja validado
+- o pacote redistribui o mesmo layout `linux-x64` ja aprovado no smoke manual; ele apenas instala esse layout em um destino mais amigável para Ubuntu/Linux desktop
+- a sprint não inclui AppImage, multiplos formatos ou CI/CD de empacotamento
 
 ## Validação manual rápida
 
@@ -115,6 +149,32 @@ Checklist curto para smoke test local:
 6. Abrir a aba de relatórios, aplicar filtros e exportar CSV.
 
 Para validação de release, repita esse checklist usando o executável gerado em `artifacts/desktop/linux-x64`.
+
+Checklist curto para o `.deb`:
+
+1. Gerar o pacote com `./scripts/package-deb.sh`.
+2. Inspecionar o conteúdo com `dpkg-deb --contents artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`.
+3. Instalar em um Ubuntu desktop real com `sudo dpkg -i artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`.
+4. Abrir pelo menu de aplicações ou executando `sme-finance-suite`.
+5. Confirmar startup, leitura de configuração e persistência local no diretório do usuário.
+
+Validação pragmática sem instalar no sistema, útil neste ambiente:
+
+```bash
+rm -rf /tmp/smefs-deb-smoke
+mkdir -p /tmp/smefs-deb-smoke/root
+dpkg-deb -x artifacts/packages/sme-finance-suite_0.30.0_amd64.deb /tmp/smefs-deb-smoke/root
+HOME=/tmp/smefs-deb-smoke/home /tmp/smefs-deb-smoke/root/opt/sme-finance-suite/SMEFinanceSuite.Desktop
+```
+
+Resultado esperado:
+
+- o `.deb` expande o app em `/opt/sme-finance-suite`
+- o launcher instalável fica disponível em `/usr/bin/sme-finance-suite`
+- o desktop entry fica disponível em `/usr/share/applications/sme-finance-suite.desktop`
+- a execucao fora do workspace preserva a leitura de `appsettings.json`
+- a persistencia relativa continua sendo resolvida para a pasta local de dados do usuário
+- em ambiente sem sessão gráfica, a falha continua amigável e consistente com o release validado anteriormente
 
 Guia curto para validar o artefato fora do workspace:
 

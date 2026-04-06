@@ -1,0 +1,8 @@
+Package: {{PACKAGE_NAME}}
+Version: {{VERSION}}
+Section: office
+Priority: optional
+Architecture: amd64
+Maintainer: SMEFinanceSuite
+Description: SME Finance Suite desktop app for Linux
+ Desktop-first finance and operations app for small business workflows.

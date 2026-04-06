@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=SME Finance Suite
+Comment=Desktop finance and operations app for small business workflows
+Exec=/usr/bin/sme-finance-suite
+Terminal=false
+Categories=Office;Finance;
+StartupNotify=true

@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+APP_DIR="{{INSTALL_DIR}}"
+APP_EXECUTABLE="$APP_DIR/{{APP_EXECUTABLE}}"
+
+exec "$APP_EXECUTABLE" "$@"

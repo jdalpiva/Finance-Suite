@@ -183,3 +183,76 @@ Achado operacional relevante:
 Limitação remanescente:
 
 - a automação de entrada completa por `xdotool` ficou inconclusiva neste ambiente, então os fluxos de cadastro/edição/navegação detalhada e a exportação CSV ainda devem ser fechados com smoke manual em uma sessão desktop limpa
+
+## Empacotamento Debian pragmático (Sprint 30 - 2026-04-06)
+
+Objetivo da etapa:
+
+- transformar o release atual em uma distribuicao mais amigavel para Ubuntu/Linux desktop sem alterar a arquitetura do produto
+
+Decisão adotada:
+
+- formato unico nesta sprint: `.deb`
+- estratégia: empacotar o mesmo diretório `artifacts/desktop/linux-x64` ja validado nas sprints anteriores
+- ferramenta: `dpkg-deb`
+- instalação do app em `/opt/sme-finance-suite`
+- launcher no sistema em `/usr/bin/sme-finance-suite`
+- desktop entry em `/usr/share/applications/sme-finance-suite.desktop`
+- ícone dedicado ficou fora do escopo por não haver asset pronto e por não ser necessário para validar distribuição real
+
+Motivo da escolha:
+
+- reaproveita integralmente o release `linux-x64` ja conhecido
+- evita introduzir pipeline paralela, formato adicional ou refactor de runtime
+- mantém o risco baixo porque o pacote só reorganiza a entrega do artefato existente
+
+Implementação mínima adicionada:
+
+- `scripts/package-deb.sh`
+- `packaging/deb/control.template`
+- `packaging/deb/launcher.template`
+- `packaging/deb/sme-finance-suite.desktop`
+
+Versão de release aplicada:
+
+- `0.30.0`
+
+Comando oficial:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 --disable-parallel -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+./scripts/package-deb.sh
+```
+
+Comportamento do script:
+
+- assume que o artefato `artifacts/desktop/linux-x64` ja foi gerado pelo fluxo oficial de release
+- monta a árvore Debian temporária em `artifacts/deb/staging/`
+- copia o artefato atual para `/opt/sme-finance-suite`
+- gera o pacote em `artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`
+
+Validação pragmática executável neste ambiente:
+
+```bash
+dotnet restore src/App.Desktop/App.Desktop.csproj -r linux-x64 --disable-parallel -v minimal
+dotnet build src/App.Desktop/App.Desktop.csproj -c Release -r linux-x64 --no-restore --disable-build-servers -v minimal -o artifacts/desktop/linux-x64
+./scripts/package-deb.sh
+dpkg-deb --contents artifacts/packages/sme-finance-suite_0.30.0_amd64.deb
+rm -rf /tmp/smefs-deb-smoke
+mkdir -p /tmp/smefs-deb-smoke/root
+dpkg-deb -x artifacts/packages/sme-finance-suite_0.30.0_amd64.deb /tmp/smefs-deb-smoke/root
+HOME=/tmp/smefs-deb-smoke/home /tmp/smefs-deb-smoke/root/opt/sme-finance-suite/SMEFinanceSuite.Desktop
+```
+
+Resultado esperado:
+
+- o conteúdo do pacote fica limitado ao layout mínimo de distribuição
+- o app continua abrindo fora do workspace pelo binário instalado em `/opt`
+- `appsettings.json` segue sendo lido a partir do diretório do executável
+- a persistência relativa continua sendo resolvida para `LocalApplicationData/SMEFinanceSuite`
+- em ambiente sem sessão gráfica, a mensagem amigável de startup permanece igual ao release anterior
+
+Limite assumido nesta sprint:
+
+- a instalação real via `sudo dpkg -i ...` e a abertura pelo menu gráfico devem ser confirmadas no Ubuntu desktop alvo, porque este ambiente não executa instalação sistêmica nem smoke visual completo
