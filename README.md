@@ -158,6 +158,19 @@ Checklist curto para o `.deb`:
 4. Abrir pelo menu de aplicações ou executando `sme-finance-suite`.
 5. Confirmar startup, leitura de configuração e persistência local no diretório do usuário.
 
+Validação executada na Sprint 31:
+
+- tentativa de instalação sistêmica com `sudo dpkg -i` bloqueada por autenticação de superusuário neste ambiente
+- conteúdo do pacote validado com `dpkg-deb --info` e `dpkg-deb --contents`
+- `sme-finance-suite.desktop` validado com `desktop-file-validate`
+- startup gráfico validado em sessão Ubuntu GNOME real a partir do conteúdo extraído do `.deb`, com janela `SME Finance Suite`
+- persistência local observada em `~/.local/share/SMEFinanceSuite/sme-finance-suite.db`
+- seed inicial confirmada no SQLite local: `1` cliente, `2` produtos/serviços e `4` lançamentos
+
+Limite conhecido dessa validação:
+
+- sem autenticação de root disponível para o agente, a instalação sistêmica real, o launcher final em `/usr/bin` e a desinstalação via `dpkg -r` permanecem para confirmação manual no Ubuntu alvo
+
 Validação pragmática sem instalar no sistema, útil neste ambiente:
 
 ```bash

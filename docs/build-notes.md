@@ -256,3 +256,46 @@ Resultado esperado:
 Limite assumido nesta sprint:
 
 - a instalação real via `sudo dpkg -i ...` e a abertura pelo menu gráfico devem ser confirmadas no Ubuntu desktop alvo, porque este ambiente não executa instalação sistêmica nem smoke visual completo
+
+## Validação do pacote instalado no alvo Ubuntu (Sprint 31 - 2026-04-06)
+
+Objetivo da etapa:
+
+- validar a instalação real do `.deb` e o uso básico do app em sessão gráfica Ubuntu, corrigindo apenas problemas concretos de baixo risco
+
+Resultado da instalação sistêmica:
+
+- tentativa executada com `sudo dpkg -i artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`
+- bloqueio observado: autenticação de superusuário indisponível para o agente neste ambiente
+- conclusão: não houve erro concreto do pacote na fase de instalação; a limitação ficou em credencial de root, não no `.deb`
+
+Validação realmente concluída nesta sprint:
+
+- `dpkg-deb --info artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`: OK
+- `dpkg-deb --contents artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`: OK
+- `desktop-file-validate` no `sme-finance-suite.desktop`: OK
+- abertura gráfica do app em sessão Ubuntu GNOME real a partir da árvore extraída do pacote: OK
+- janela confirmada com título `SME Finance Suite`
+- geometria observada da janela:
+  - largura: `1170`
+  - altura: `807`
+- persistência local confirmada em `~/.local/share/SMEFinanceSuite/sme-finance-suite.db`
+- seed inicial confirmada no banco local:
+  - `customers`: `1`
+  - `products_services`: `2`
+  - `financial_entries`: `4`
+
+Achado operacional relevante:
+
+- em Linux desktop, trocar apenas `HOME` no processo não foi suficiente para isolar a persistência em `LocalApplicationData`; o comportamento observado permaneceu coerente com a nota já documentada na Sprint 28
+
+Correções de produto nesta sprint:
+
+- nenhuma alteração de código foi necessária, porque não apareceu defeito concreto de instalação ou execução do pacote
+
+Pontos que permanecem pendentes para fechamento final do ciclo:
+
+- instalação sistêmica real com credencial de root
+- validação do launcher final em `/usr/bin/sme-finance-suite`
+- validação do desktop entry pelo menu do sistema após instalação
+- desinstalação real com `dpkg -r`
