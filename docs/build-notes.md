@@ -299,3 +299,49 @@ Pontos que permanecem pendentes para fechamento final do ciclo:
 - validação do launcher final em `/usr/bin/sme-finance-suite`
 - validação do desktop entry pelo menu do sistema após instalação
 - desinstalação real com `dpkg -r`
+
+## Fechamento pragmático do release Debian (Sprint 32 - 2026-04-07)
+
+Objetivo da etapa:
+
+- concluir a validação real do `.deb` já gerado, sem ampliar escopo além de instalação, uso básico do app instalado e desinstalação
+
+Instalação sistêmica validada:
+
+- instalação real executada manualmente com `sudo dpkg -i /home/jdalpiva/Documentos/ProjetoFinanceSuite/SMEFinanceSuite/artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`
+- `dpkg -s sme-finance-suite`: `install ok installed`
+- não apareceu conflito de pacote nem erro de dependência durante a instalação
+
+Validação do app instalado:
+
+- `dpkg -L sme-finance-suite` confirmou o layout esperado em `/opt/sme-finance-suite`, `/usr/bin/sme-finance-suite` e `/usr/share/applications/sme-finance-suite.desktop`
+- o launcher instalado em `/usr/bin/sme-finance-suite` apontou corretamente para `/opt/sme-finance-suite/SMEFinanceSuite.Desktop`
+- `desktop-file-validate /usr/share/applications/sme-finance-suite.desktop`: OK
+- `gtk-launch sme-finance-suite`: OK, confirmando a resolução do desktop entry pelo sistema
+- o app instalado permaneceu aberto durante smoke gráfico controlado em sessão Ubuntu GNOME real
+- a leitura de configuração e a persistência local do app instalado foram confirmadas com `XDG_DATA_HOME=/tmp/smefs-s32-data`
+- o banco isolado criado pelo app instalado ficou em `/tmp/smefs-s32-data/SMEFinanceSuite/sme-finance-suite.db`
+- seed inicial confirmada no banco isolado:
+  - `customers`: `1`
+  - `products_services`: `2`
+  - `financial_entries`: `4`
+
+Achado operacional relevante:
+
+- em Linux desktop, o caminho relativo do SQLite continua sendo resolvido por `LocalApplicationData/SMEFinanceSuite`
+- para smoke isolado sem reaproveitar a pasta real do usuário, `XDG_DATA_HOME` funcionou como override pragmático de baixo risco nesta validação
+
+Desinstalação sistêmica validada:
+
+- remoção real executada manualmente com `sudo dpkg -r sme-finance-suite`
+- após a remoção, `dpkg -s sme-finance-suite` passou a retornar pacote não instalado
+- `/opt/sme-finance-suite`, `/usr/bin/sme-finance-suite` e `/usr/share/applications/sme-finance-suite.desktop` deixaram de existir
+- o banco do usuário fora do pacote permaneceu intacto, sem resíduo sistêmico inesperado além da persistência escolhida
+
+Correções de produto nesta sprint:
+
+- nenhuma alteração de código foi necessária
+
+Próximo passo natural:
+
+- expandir o smoke manual do app instalado para fluxos visuais mais profundos de cadastro, edição, exclusão e exportação CSV, se isso ainda for necessário antes de abrir outro formato de distribuição

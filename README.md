@@ -157,6 +157,7 @@ Checklist curto para o `.deb`:
 3. Instalar em um Ubuntu desktop real com `sudo dpkg -i artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`.
 4. Abrir pelo menu de aplicações ou executando `sme-finance-suite`.
 5. Confirmar startup, leitura de configuração e persistência local no diretório do usuário.
+6. Remover com `sudo dpkg -r sme-finance-suite` e confirmar que apenas a persistência do usuário permanece.
 
 Validação executada na Sprint 31:
 
@@ -170,6 +171,20 @@ Validação executada na Sprint 31:
 Limite conhecido dessa validação:
 
 - sem autenticação de root disponível para o agente, a instalação sistêmica real, o launcher final em `/usr/bin` e a desinstalação via `dpkg -r` permanecem para confirmação manual no Ubuntu alvo
+
+Validação executada na Sprint 32 em 2026-04-07:
+
+- instalação sistêmica real concluída com `sudo dpkg -i /home/jdalpiva/Documentos/ProjetoFinanceSuite/SMEFinanceSuite/artifacts/packages/sme-finance-suite_0.30.0_amd64.deb`
+- `dpkg -s sme-finance-suite`: `install ok installed`
+- launcher final confirmado em `/usr/bin/sme-finance-suite`
+- desktop entry final confirmado em `/usr/share/applications/sme-finance-suite.desktop`
+- abertura do app instalado validada pelo launcher do sistema em sessão Ubuntu GNOME real
+- resolução do desktop entry pelo sistema validada com `gtk-launch sme-finance-suite`
+- leitura de configuração e persistência local do app instalado confirmadas com `XDG_DATA_HOME=/tmp/smefs-s32-data`, gerando o banco em `/tmp/smefs-s32-data/SMEFinanceSuite/sme-finance-suite.db`
+- seed inicial confirmada no banco isolado do app instalado: `1` cliente, `2` produtos/serviços e `4` lançamentos
+- desinstalação sistêmica real concluída com `sudo dpkg -r sme-finance-suite`
+- após `dpkg -r`, `/opt/sme-finance-suite`, `/usr/bin/sme-finance-suite` e `/usr/share/applications/sme-finance-suite.desktop` deixaram de existir
+- a persistência do usuário permaneceu fora do pacote, que é o comportamento atual escolhido
 
 Validação pragmática sem instalar no sistema, útil neste ambiente:
 
